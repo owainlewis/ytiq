@@ -5,6 +5,9 @@ on:
   push:
     branches: [ main ]
 
+env:
+  BUNDLE_PATH: vendor/gems
+
 jobs:
   scan_ruby:
     runs-on: ubuntu-latest
