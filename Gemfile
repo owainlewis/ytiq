@@ -78,3 +78,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+gem "mocha", "~> 3.1", :group => :test

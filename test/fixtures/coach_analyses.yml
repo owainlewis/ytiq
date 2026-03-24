@@ -1,7 +1,6 @@
 one:
   user: one
-  analyzable_type: Channel
-  analyzable_id: 1
+  analyzable: one (Channel)
   analysis_type: channel_review
   status: completed
   response_markdown: "# Analysis\nGreat channel."
@@ -9,8 +8,7 @@ one:
 
 two:
   user: one
-  analyzable_type: Video
-  analyzable_id: 1
+  analyzable: one (Video)
   analysis_type: video_review
   status: pending
   response_markdown: ""

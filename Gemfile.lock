@@ -209,6 +209,8 @@ GEM
       json-schema (>= 4.1)
     mini_mime (1.1.5)
     minitest (5.27.0)
+    mocha (3.1.0)
+      ruby2_keywords (>= 0.0.5)
     msgpack (1.8.0)
     multi_json (1.19.1)
     multi_xml (0.8.1)
@@ -392,6 +394,7 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    ruby2_keywords (0.0.5)
     rubyzip (3.2.2)
     securerandom (0.4.1)
     selenium-webdriver (4.41.0)
@@ -504,6 +507,7 @@ DEPENDENCIES
   importmap-rails
   kamal
   minitest (~> 5.25)
+  mocha (~> 3.1)
   omniauth-google-oauth2
   omniauth-rails_csrf_protection
   pagy (~> 9.0)
