@@ -12,7 +12,7 @@ module Youtube
       # https://www.youtube.com/@handle
       %r{youtube\.com/@(?<handle>[\w.-]+)},
       # https://www.youtube.com/c/ChannelName or /user/Username
-      %r{youtube\.com/(?:c|user)/(?<custom>[\w.-]+)},
+      %r{youtube\.com/(?:c|user)/(?<custom>[\w.-]+)}
     ].freeze
 
     def self.parse(input)

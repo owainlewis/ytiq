@@ -1,6 +1,6 @@
 class ScriptSectionsController < ApplicationController
   before_action :set_script
-  before_action :set_section, only: [:update, :destroy]
+  before_action :set_section, only: [ :update, :destroy ]
 
   def create
     position = @script.script_sections.count

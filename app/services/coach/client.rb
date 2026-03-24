@@ -16,7 +16,7 @@ module Coach
           model: MODEL,
           max_tokens: MAX_TOKENS,
           system: system_prompt,
-          messages: [{ role: "user", content: user_message }],
+          messages: [ { role: "user", content: user_message } ],
           stream: proc { |event|
             case event["type"]
             when "content_block_delta"

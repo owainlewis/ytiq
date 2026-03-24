@@ -8,6 +8,6 @@ class CreateScriptSections < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
-    add_index :script_sections, [:project_id, :position]
+    add_index :script_sections, [ :project_id, :position ]
   end
 end

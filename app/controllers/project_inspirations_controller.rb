@@ -50,7 +50,7 @@ class ProjectInspirationsController < ApplicationController
 
   def fetch_video_from_youtube(video_id)
     client = Youtube::Client.new
-    video_data = client.videos_by_ids([video_id]).first
+    video_data = client.videos_by_ids([ video_id ]).first
     return nil unless video_data
 
     # Ensure the channel exists locally

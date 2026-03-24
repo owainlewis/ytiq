@@ -57,6 +57,5 @@ module Coach
         5. **Replication Advice** — How to replicate successes or avoid the same mistakes
       MSG
     end
-
   end
 end

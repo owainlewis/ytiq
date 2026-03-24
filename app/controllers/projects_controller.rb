@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :generate_analysis, :remove_thumbnail]
+  before_action :set_project, only: [ :show, :edit, :update, :destroy, :generate_analysis, :remove_thumbnail ]
 
   def index
     @pagy, @projects = pagy(current_user.projects.includes(:project_inspirations).recent, limit: 20)

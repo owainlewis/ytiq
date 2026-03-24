@@ -16,6 +16,6 @@ class Project < ApplicationRecord
 
   def progress
     done = CHECKLIST_ITEMS.count { |item| send(:"checklist_#{item}") }
-    [done, CHECKLIST_ITEMS.size]
+    [ done, CHECKLIST_ITEMS.size ]
   end
 end
