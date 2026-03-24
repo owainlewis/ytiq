@@ -7,6 +7,8 @@ class ProjectsController < ApplicationController
 
   def show
     @inspirations = @project.project_inspirations.includes(video: :channel)
+    @script = @project.script || @project.create_script!
+    @script_sections = @script.script_sections.ordered
   end
 
   def new

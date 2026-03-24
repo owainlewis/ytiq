@@ -22,6 +22,8 @@ Rails.application.routes.draw do
     end
     resources :inspirations, only: [:create, :destroy],
               controller: "project_inspirations"
+    resource :script, only: [:update]
+    resources :script_sections, only: [:create, :update, :destroy]
   end
 
   resources :channels, only: [] do
