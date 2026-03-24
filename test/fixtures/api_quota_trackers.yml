@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  date: 2026-03-19
+  units_used: 1
+
+two:
+  date: 2026-03-18
+  units_used: 1

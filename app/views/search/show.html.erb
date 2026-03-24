@@ -1,0 +1,64 @@
+<div class="mb-8">
+  <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Topic Research</h1>
+  <p class="mt-1 text-sm text-zinc-500">Search for videos and find outliers</p>
+</div>
+
+<div class="mb-8 rounded-lg border border-zinc-200 bg-white p-5">
+  <%= form_with url: search_path, method: :get, class: "space-y-4" do |f| %>
+    <div class="flex gap-3">
+      <%= f.text_field :q, value: @query, placeholder: "Search topics, keywords...", class: "flex-1 rounded-md border border-zinc-200 bg-white py-2 px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1", required: true %>
+      <%= f.submit "Search", class: "inline-flex items-center rounded-md bg-zinc-900 px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 cursor-pointer" %>
+    </div>
+    <div class="flex flex-wrap gap-4 text-sm">
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Min Outlier</label>
+        <%= f.number_field :min_outlier, value: params[:min_outlier], step: 0.5, min: 0, placeholder: "e.g. 2.0", class: "w-24 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Min Views</label>
+        <%= f.number_field :min_views, value: params[:min_views], min: 0, placeholder: "e.g. 10000", class: "w-28 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Max Views</label>
+        <%= f.number_field :max_views, value: params[:max_views], min: 0, placeholder: "e.g. 500000", class: "w-28 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Published</label>
+        <%= f.select :days, [["Any time", ""], ["Last 7 days", "7"], ["Last 14 days", "14"], ["Last 30 days", "30"], ["Last 60 days", "60"], ["Last 90 days", "90"]], { selected: params[:days] }, class: "rounded-md border border-zinc-200 py-1.5 pl-2 pr-8 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Sort</label>
+        <%= f.select :sort, [["Outlier Score", "outlier_score"], ["Views", "view_count"], ["Newest", "published_at"]], { selected: params[:sort] || "outlier_score" }, class: "rounded-md border border-zinc-200 py-1.5 pl-2 pr-8 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-4 text-sm">
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Min Subscribers</label>
+        <%= f.number_field :min_subs, value: params[:min_subs], min: 0, placeholder: "e.g. 1000", class: "w-28 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-zinc-500">Max Subscribers</label>
+        <%= f.number_field :max_subs, value: params[:max_subs], min: 0, placeholder: "e.g. 100000", class: "w-28 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<% if @error.present? %>
+  <div class="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+    <p class="text-sm text-red-800"><%= @error %></p>
+  </div>
+<% end %>
+
+<% if @query.present? && @videos.present? %>
+  <p class="text-xs text-zinc-400 mb-4"><%= @videos.size %> results</p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <% @videos.each do |video| %>
+      <%= render "shared/video_card", video: video %>
+    <% end %>
+  </div>
+<% elsif @query.present? && @videos&.empty? %>
+  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-16">
+    <p class="text-sm text-zinc-500">No results found for "<%= @query %>"</p>
+  </div>
+<% end %>

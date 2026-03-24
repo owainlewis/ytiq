@@ -1,0 +1,59 @@
+<div class="mb-8">
+  <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Coach History</h1>
+  <p class="mt-1 text-sm text-zinc-500">Previous AI Coach analyses</p>
+</div>
+
+<% if @analyses.empty? %>
+  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-16">
+    <svg class="h-10 w-10 text-zinc-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+    </svg>
+    <p class="text-sm text-zinc-500 mb-1">No analyses yet.</p>
+    <p class="text-xs text-zinc-400">Click "AI Coach" on a channel or video to get started.</p>
+  </div>
+<% else %>
+  <div class="rounded-lg border border-zinc-200 bg-white overflow-hidden">
+    <table class="min-w-full divide-y divide-zinc-100">
+      <thead>
+        <tr class="bg-zinc-50/50">
+          <th class="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-zinc-400">Type</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-zinc-400">Target</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-zinc-400">Status</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-zinc-400">Date</th>
+          <th class="px-4 py-2.5"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-100">
+        <% @analyses.each do |analysis| %>
+          <tr class="hover:bg-zinc-50/50">
+            <td class="px-4 py-3 text-sm text-zinc-900"><%= analysis.analysis_type.humanize %></td>
+            <td class="px-4 py-3 text-sm text-zinc-500">
+              <% if analysis.analyzable %>
+                <%= analysis.analyzable.title %>
+              <% else %>
+                <span class="italic text-zinc-300">Deleted</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <% case analysis.status %>
+              <% when "completed" %>
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">Complete</span>
+              <% when "pending", "streaming" %>
+                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">In Progress</span>
+              <% when "failed" %>
+                <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">Failed</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-xs text-zinc-400"><%= analysis.created_at.strftime("%b %d, %Y %H:%M") %></td>
+            <td class="px-4 py-3 text-right">
+              <%= link_to "View", coach_analysis_path(analysis), class: "text-xs font-medium text-zinc-500 hover:text-zinc-900" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-8">
+    <%== pagy_nav(@pagy) %>
+  </div>
+<% end %>

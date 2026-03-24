@@ -1,0 +1,36 @@
+<div class="mb-8">
+  <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Channels</h1>
+  <p class="mt-1 text-sm text-zinc-500">Track YouTube channels to monitor their videos</p>
+</div>
+
+<div class="mb-8 rounded-lg border border-zinc-200 bg-white p-5">
+  <h2 class="text-sm font-medium text-zinc-900 mb-3">Add a Channel</h2>
+  <%= form_with url: channels_path, method: :post, class: "flex gap-3" do |f| %>
+    <%= f.text_field :query, placeholder: "YouTube URL, @handle, or channel name", class: "flex-1 rounded-md border border-zinc-200 bg-white py-2 px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1", required: true %>
+    <%= f.submit "Add Channel", class: "inline-flex items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 cursor-pointer" %>
+  <% end %>
+</div>
+
+<% if @channels.empty? %>
+  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-16">
+    <p class="text-sm text-zinc-500">No tracked channels yet. Add one above!</p>
+  </div>
+<% else %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% @channels.each do |channel| %>
+      <div class="rounded-lg border border-zinc-200 bg-white p-4 flex items-start gap-4">
+        <% if channel.thumbnail_url.present? %>
+          <img src="<%= channel.thumbnail_url %>" alt="<%= channel.title %>" class="w-10 h-10 rounded-full" referrerpolicy="no-referrer">
+        <% end %>
+        <div class="flex-1 min-w-0">
+          <%= link_to channel.title, channel_path(channel), class: "text-sm font-medium text-zinc-900 hover:underline truncate block" %>
+          <p class="text-xs text-zinc-500 mt-0.5"><%= channel.custom_url %></p>
+          <div class="mt-1.5 text-xs text-zinc-400">
+            <span><%= number_to_human(channel.subscriber_count || 0, precision: 2, significant: true) %> subscribers</span>
+          </div>
+        </div>
+        <%= button_to "Unfollow", channel_path(channel), method: :delete, class: "text-xs text-zinc-400 hover:text-red-600", data: { turbo_confirm: "Unfollow #{channel.title}?" } %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

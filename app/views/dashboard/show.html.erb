@@ -1,0 +1,23 @@
+<div class="mb-8">
+  <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Dashboard</h1>
+  <p class="mt-1 text-sm text-zinc-500">Latest videos from your tracked channels</p>
+</div>
+
+<% if @videos.empty? %>
+  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-16">
+    <svg class="h-10 w-10 text-zinc-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+    </svg>
+    <p class="text-sm text-zinc-500 mb-4">You haven't tracked any channels yet.</p>
+    <%= link_to "Add a Channel", channels_path, class: "inline-flex items-center rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800" %>
+  </div>
+<% else %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <% @videos.each do |video| %>
+      <%= render "shared/video_card", video: video %>
+    <% end %>
+  </div>
+  <div class="mt-8">
+    <%== pagy_nav(@pagy) %>
+  </div>
+<% end %>

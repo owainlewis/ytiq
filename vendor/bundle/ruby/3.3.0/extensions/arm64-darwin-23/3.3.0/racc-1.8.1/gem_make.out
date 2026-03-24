@@ -1,0 +1,18 @@
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-emk2sf sitelibdir\=./.gem.20260319-29049-emk2sf clean
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-emk2sf sitelibdir\=./.gem.20260319-29049-emk2sf
+compiling cparse.c
+linking shared-object racc/cparse.bundle
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-emk2sf sitelibdir\=./.gem.20260319-29049-emk2sf install
+/usr/bin/install -c -m 0755 cparse.bundle ./.gem.20260319-29049-emk2sf/racc
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-emk2sf sitelibdir\=./.gem.20260319-29049-emk2sf clean

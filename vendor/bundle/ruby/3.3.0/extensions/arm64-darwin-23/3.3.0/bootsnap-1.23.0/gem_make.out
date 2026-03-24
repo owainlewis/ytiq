@@ -1,0 +1,23 @@
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.23.0/ext/bootsnap
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+checking for fdatasync() in unistd.h... yes
+checking for fstatat() in sys/stat.h... yes
+checking for whether -D_GNU_SOURCE is accepted as CPPFLAGS... yes
+checking for whether -O3 is accepted as CFLAGS... yes
+checking for whether -std=c99 is accepted as CFLAGS... yes
+creating Makefile
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.23.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-6rc55b sitelibdir\=./.gem.20260319-29049-6rc55b clean
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.23.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-6rc55b sitelibdir\=./.gem.20260319-29049-6rc55b
+compiling bootsnap.c
+linking shared-object bootsnap/bootsnap.bundle
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.23.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-6rc55b sitelibdir\=./.gem.20260319-29049-6rc55b install
+/usr/bin/install -c -m 0755 bootsnap.bundle ./.gem.20260319-29049-6rc55b/bootsnap
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bootsnap-1.23.0/ext/bootsnap
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-6rc55b sitelibdir\=./.gem.20260319-29049-6rc55b clean

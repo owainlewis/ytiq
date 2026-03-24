@@ -1,0 +1,19 @@
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-xc6i03 sitelibdir\=./.gem.20260319-29049-xc6i03 clean
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-xc6i03 sitelibdir\=./.gem.20260319-29049-xc6i03
+compiling debug.c
+compiling iseq_collector.c
+linking shared-object debug/debug.bundle
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-xc6i03 sitelibdir\=./.gem.20260319-29049-xc6i03 install
+/usr/bin/install -c -m 0755 debug.bundle ./.gem.20260319-29049-xc6i03/debug
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-xc6i03 sitelibdir\=./.gem.20260319-29049-xc6i03 clean

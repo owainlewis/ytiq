@@ -1,0 +1,18 @@
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-8a93lc sitelibdir\=./.gem.20260319-29049-8a93lc clean
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-8a93lc sitelibdir\=./.gem.20260319-29049-8a93lc
+compiling websocket_mask.c
+linking shared-object websocket_mask.bundle
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-8a93lc sitelibdir\=./.gem.20260319-29049-8a93lc install
+/usr/bin/install -c -m 0755 websocket_mask.bundle ./.gem.20260319-29049-8a93lc
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-8a93lc sitelibdir\=./.gem.20260319-29049-8a93lc clean

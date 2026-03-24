@@ -1,0 +1,41 @@
+<div class="mb-8">
+  <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Settings</h1>
+  <p class="mt-1 text-sm text-zinc-500">Configure your YTIQ preferences</p>
+</div>
+
+<div class="rounded-lg border border-zinc-200 bg-white p-6 max-w-lg">
+  <h2 class="text-sm font-medium text-zinc-900 mb-1">My Channel</h2>
+  <p class="text-xs text-zinc-500 mb-5">
+    Set your own channel so the AI Coach can give you personalized advice.
+  </p>
+
+  <% if current_user.own_channel.present? %>
+    <div class="flex items-center gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 mb-4">
+      <% if current_user.own_channel.thumbnail_url.present? %>
+        <img src="<%= current_user.own_channel.thumbnail_url %>" class="h-8 w-8 rounded-full" referrerpolicy="no-referrer">
+      <% end %>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-zinc-900 truncate"><%= current_user.own_channel.title %></p>
+        <p class="text-xs text-zinc-400"><%= number_to_human(current_user.own_channel.subscriber_count || 0, precision: 2, significant: true) %> subscribers</p>
+      </div>
+      <%= button_to settings_path, method: :patch, params: { user: { own_channel_id: "" } }, class: "text-xs text-zinc-400 hover:text-red-500 cursor-pointer" do %>
+        Remove
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= form_with url: settings_path, method: :patch, class: "space-y-4" do |f| %>
+    <div>
+      <label for="channel_query" class="block text-xs font-medium text-zinc-700 mb-1.5">
+        <%= current_user.own_channel.present? ? "Change channel" : "Your channel" %>
+      </label>
+      <input type="text" name="channel_query" id="channel_query"
+             placeholder="Enter channel URL or @handle"
+             class="block w-full rounded-md border border-zinc-200 py-2 pl-3 pr-8 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1">
+      <p class="mt-1 text-[11px] text-zinc-400">e.g. https://youtube.com/@MrBeast or @MrBeast</p>
+    </div>
+    <div>
+      <%= f.submit "Save Settings", class: "inline-flex items-center rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 cursor-pointer" %>
+    </div>
+  <% end %>
+</div>

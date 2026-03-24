@@ -1,0 +1,27 @@
+<div class="rounded-md border border-zinc-200 bg-zinc-50 overflow-hidden">
+  <% video = inspiration.video %>
+  <div class="flex gap-3 p-3">
+    <% if video.thumbnail_url.present? %>
+      <a href="https://www.youtube.com/watch?v=<%= video.youtube_video_id %>" target="_blank" rel="noopener" class="shrink-0">
+        <img src="<%= video.thumbnail_url %>" alt="" class="w-24 h-14 object-cover rounded" loading="lazy" referrerpolicy="no-referrer">
+      </a>
+    <% end %>
+    <div class="min-w-0 flex-1">
+      <a href="https://www.youtube.com/watch?v=<%= video.youtube_video_id %>" target="_blank" rel="noopener" class="text-xs font-medium text-zinc-900 line-clamp-2 hover:underline"><%= video.title %></a>
+      <div class="mt-0.5 flex items-center gap-2 text-[11px] text-zinc-400">
+        <span><%= video.channel&.title %></span>
+        <span><%= number_to_human(video.view_count || 0, precision: 2, significant: true) %> views</span>
+        <% if video.outlier_score.present? %>
+          <span class="font-medium text-zinc-500"><%= "%.1fx" % video.outlier_score %></span>
+        <% end %>
+      </div>
+    </div>
+    <div class="shrink-0">
+      <%= button_to project_inspiration_path(inspiration.project, inspiration), method: :delete, class: "text-zinc-300 hover:text-red-500 cursor-pointer", data: { turbo_confirm: "Remove?" } do %>
+        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      <% end %>
+    </div>
+  </div>
+</div>

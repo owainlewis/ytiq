@@ -1,0 +1,18 @@
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bindex-0.8.1/ext/skiptrace
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bindex-0.8.1/ext/skiptrace
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-f392m9 sitelibdir\=./.gem.20260319-29049-f392m9 clean
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bindex-0.8.1/ext/skiptrace
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-f392m9 sitelibdir\=./.gem.20260319-29049-f392m9
+compiling cruby.c
+linking shared-object skiptrace/internal/cruby.bundle
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bindex-0.8.1/ext/skiptrace
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-f392m9 sitelibdir\=./.gem.20260319-29049-f392m9 install
+/usr/bin/install -c -m 0755 cruby.bundle ./.gem.20260319-29049-f392m9/skiptrace/internal
+
+current directory: /Users/owainlewis/Code/ytiq/vendor/bundle/ruby/3.3.0/gems/bindex-0.8.1/ext/skiptrace
+make DESTDIR\= sitearchdir\=./.gem.20260319-29049-f392m9 sitelibdir\=./.gem.20260319-29049-f392m9 clean
