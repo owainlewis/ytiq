@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  channel: one
+  youtube_video_id: vidfixture1
+  title: Fixture Video One
+  description: First test video
+  thumbnail_url: https://example.com/vthumb1.jpg
+  published_at: 2026-03-19 15:18:00
+  view_count: 1000
+  like_count: 100
+  comment_count: 10
+  duration: PT10M
+  outlier_score: 1.5
+
+two:
+  channel: two
+  youtube_video_id: vidfixture2
+  title: Fixture Video Two
+  description: Second test video
+  thumbnail_url: https://example.com/vthumb2.jpg
+  published_at: 2026-03-18 15:18:00
+  view_count: 2000
+  like_count: 200
+  comment_count: 20
+  duration: PT15M
+  outlier_score: 1.5
