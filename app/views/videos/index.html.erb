@@ -1,29 +1,29 @@
 <div class="mb-8">
-  <h1 class="text-xl font-semibold tracking-tight text-zinc-900">All Videos</h1>
-  <p class="mt-1 text-sm text-zinc-500">Browse all fetched videos</p>
+  <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">All Videos</h1>
+  <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Browse all fetched videos</p>
 </div>
 
-<div class="mb-8 rounded-lg border border-zinc-200 bg-white p-4">
+<div class="mb-8 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
   <%= form_with url: videos_path, method: :get, class: "flex flex-wrap gap-4 items-end text-sm" do |f| %>
     <div>
-      <label class="text-xs text-zinc-500 block mb-1">Min Outlier Score</label>
-      <%= f.number_field :min_outlier, value: params[:min_outlier], step: 0.5, min: 0, placeholder: "e.g. 2.0", class: "w-24 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      <label class="text-xs text-zinc-500 dark:text-zinc-400 block mb-1">Min Outlier Score</label>
+      <%= f.number_field :min_outlier, value: params[:min_outlier], step: 0.5, min: 0, placeholder: "e.g. 2.0", class: "w-24 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-1.5 px-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 dark:focus:ring-offset-zinc-900" %>
     </div>
     <div>
-      <label class="text-xs text-zinc-500 block mb-1">Min Views</label>
-      <%= f.number_field :min_views, value: params[:min_views], min: 0, placeholder: "e.g. 10000", class: "w-28 rounded-md border border-zinc-200 py-1.5 px-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      <label class="text-xs text-zinc-500 dark:text-zinc-400 block mb-1">Min Views</label>
+      <%= f.number_field :min_views, value: params[:min_views], min: 0, placeholder: "e.g. 10000", class: "w-28 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-1.5 px-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 dark:focus:ring-offset-zinc-900" %>
     </div>
     <div>
-      <label class="text-xs text-zinc-500 block mb-1">Sort</label>
-      <%= f.select :sort, [["Outlier Score", "outlier_score"], ["Views", "view_count"], ["Newest", "published_at"]], { selected: params[:sort] || "outlier_score" }, class: "rounded-md border border-zinc-200 py-1.5 pl-2 pr-8 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1" %>
+      <label class="text-xs text-zinc-500 dark:text-zinc-400 block mb-1">Sort</label>
+      <%= f.select :sort, [["Outlier Score", "outlier_score"], ["Views", "view_count"], ["Newest", "published_at"]], { selected: params[:sort] || "outlier_score" }, class: "rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-1.5 pl-2 pr-8 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 dark:focus:ring-offset-zinc-900" %>
     </div>
     <%= f.submit "Filter", class: "inline-flex items-center rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 cursor-pointer" %>
   <% end %>
 </div>
 
 <% if @videos.empty? %>
-  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-16">
-    <p class="text-sm text-zinc-500">No videos yet. Track some channels or run a search first.</p>
+  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 py-16">
+    <p class="text-sm text-zinc-500 dark:text-zinc-400">No videos yet. Track some channels or run a search first.</p>
   </div>
 <% else %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

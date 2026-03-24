@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   resources :projects do
     member do
       post :generate_analysis
+      delete :remove_thumbnail
     end
     resources :inspirations, only: [:create, :destroy],
               controller: "project_inspirations"

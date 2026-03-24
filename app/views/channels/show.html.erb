@@ -4,9 +4,9 @@
       <img src="<%= @channel.thumbnail_url %>" alt="<%= @channel.title %>" class="w-14 h-14 rounded-full" referrerpolicy="no-referrer">
     <% end %>
     <div class="flex-1">
-      <h1 class="text-xl font-semibold tracking-tight text-zinc-900"><%= @channel.title %></h1>
-      <p class="text-sm text-zinc-500"><%= @channel.custom_url %></p>
-      <div class="mt-1 flex items-center text-xs text-zinc-400 gap-4">
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"><%= @channel.title %></h1>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400"><%= @channel.custom_url %></p>
+      <div class="mt-1 flex items-center text-xs text-zinc-400 dark:text-zinc-500 gap-4">
         <span><%= number_to_human(@channel.subscriber_count || 0, precision: 2, significant: true) %> subscribers</span>
         <span><%= number_to_human(@channel.total_view_count || 0, precision: 2, significant: true) %> total views</span>
         <span>Avg: <%= number_to_human(@channel.average_view_count || 0, precision: 2, significant: true) %> views/video</span>
@@ -15,7 +15,7 @@
     <div class="flex items-center gap-2 shrink-0">
       <%= button_to "AI Coach", coach_channel_path(@channel), method: :post, class: "inline-flex items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800" %>
       <% if @is_tracked %>
-        <%= button_to "Unfollow", channel_path(@channel), method: :delete, class: "inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50" %>
+        <%= button_to "Unfollow", channel_path(@channel), method: :delete, class: "inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-800" %>
       <% else %>
         <%= form_with url: channels_path, method: :post do |f| %>
           <%= f.hidden_field :query, value: @channel.youtube_channel_id %>
@@ -26,16 +26,16 @@
   </div>
 
   <div class="flex items-center gap-1.5 text-sm mb-6">
-    <span class="text-zinc-400 text-xs mr-1">Sort:</span>
-    <%= link_to "Newest", channel_path(@channel, sort: "published_at", direction: "desc"), class: "rounded-md px-2.5 py-1 text-xs font-medium #{params[:sort] == 'published_at' || params[:sort].nil? ? 'bg-zinc-900 text-white' : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50'}" %>
-    <%= link_to "Most Viewed", channel_path(@channel, sort: "view_count", direction: "desc"), class: "rounded-md px-2.5 py-1 text-xs font-medium #{params[:sort] == 'view_count' ? 'bg-zinc-900 text-white' : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50'}" %>
-    <%= link_to "Outlier Score", channel_path(@channel, sort: "outlier_score", direction: "desc"), class: "rounded-md px-2.5 py-1 text-xs font-medium #{params[:sort] == 'outlier_score' ? 'bg-zinc-900 text-white' : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50'}" %>
+    <span class="text-zinc-400 dark:text-zinc-500 text-xs mr-1">Sort:</span>
+    <%= link_to "Newest", channel_path(@channel, sort: "published_at", direction: "desc"), class: "rounded-md px-2.5 py-1 text-xs font-medium #{params[:sort] == 'published_at' || params[:sort].nil? ? 'bg-zinc-900 text-white' : 'border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}" %>
+    <%= link_to "Most Viewed", channel_path(@channel, sort: "view_count", direction: "desc"), class: "rounded-md px-2.5 py-1 text-xs font-medium #{params[:sort] == 'view_count' ? 'bg-zinc-900 text-white' : 'border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}" %>
+    <%= link_to "Outlier Score", channel_path(@channel, sort: "outlier_score", direction: "desc"), class: "rounded-md px-2.5 py-1 text-xs font-medium #{params[:sort] == 'outlier_score' ? 'bg-zinc-900 text-white' : 'border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}" %>
   </div>
 </div>
 
 <% if @videos.empty? %>
-  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-16">
-    <p class="text-sm text-zinc-500">No videos fetched yet. They'll appear shortly after the background job runs.</p>
+  <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 py-16">
+    <p class="text-sm text-zinc-500 dark:text-zinc-400">No videos fetched yet. They'll appear shortly after the background job runs.</p>
   </div>
 <% else %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

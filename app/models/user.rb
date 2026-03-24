@@ -12,6 +12,10 @@ class User < ApplicationRecord
 
   belongs_to :own_channel, class_name: "Channel", optional: true
 
+  def display_avatar_url
+    avatar_url.presence || own_channel&.thumbnail_url
+  end
+
   def self.from_omniauth(auth)
     where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
       user.email = auth.info.email

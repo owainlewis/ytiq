@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :generate_analysis]
+  before_action :set_project, only: [:show, :edit, :update, :destroy, :generate_analysis, :remove_thumbnail]
 
   def index
     @pagy, @projects = pagy(current_user.projects.includes(:project_inspirations).recent, limit: 20)
@@ -30,7 +30,11 @@ class ProjectsController < ApplicationController
     if @project.update(project_params)
       respond_to do |format|
         format.html { redirect_to project_path(@project), notice: "Project updated." }
-        format.turbo_stream
+        format.turbo_stream do
+          if params.dig(:project, :thumbnail).present?
+            redirect_to project_path(@project), notice: "Thumbnail uploaded."
+          end
+        end
       end
     else
       render :edit, status: :unprocessable_entity
@@ -40,6 +44,11 @@ class ProjectsController < ApplicationController
   def destroy
     @project.destroy
     redirect_to projects_path, notice: "Project deleted."
+  end
+
+  def remove_thumbnail
+    @project.thumbnail.purge
+    redirect_to project_path(@project), notice: "Thumbnail removed."
   end
 
   def generate_analysis

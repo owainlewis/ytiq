@@ -1,7 +1,7 @@
-<div class="prose prose-zinc prose-sm max-w-none prose-headings:tracking-tight prose-a:text-zinc-900 prose-a:underline">
+<div class="prose prose-zinc dark:prose-invert prose-sm max-w-none prose-headings:tracking-tight prose-a:text-zinc-900 dark:prose-a:text-zinc-100 prose-a:underline">
   <% if analysis.response_markdown.present? %>
     <%= markdown(analysis.response_markdown) %>
   <% elsif analysis.status == "pending" || analysis.status == "streaming" %>
-    <p class="text-zinc-400 italic">Waiting for analysis...</p>
+    <p class="text-zinc-400 dark:text-zinc-500 italic">Waiting for analysis...</p>
   <% end %>
 </div>

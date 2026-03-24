@@ -2,20 +2,20 @@
 <div class="mb-8">
   <div class="flex items-start justify-between">
     <div>
-      <h1 class="text-xl font-semibold tracking-tight text-zinc-900"><%= @project.title %></h1>
-      <p class="mt-1 text-sm text-zinc-500">
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"><%= @project.title %></h1>
+      <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
         <% if @project.channel %><%= @project.channel.title %> &middot; <% end %>
         Created <%= time_ago_in_words(@project.created_at) %> ago
       </p>
     </div>
     <div class="flex items-center gap-2">
-      <%= link_to edit_project_path(@project), class: "inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200" do %>
+      <%= link_to edit_project_path(@project), class: "inline-flex items-center gap-1 rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700" do %>
         <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
         Edit
       <% end %>
-      <%= button_to project_path(@project), method: :delete, class: "inline-flex items-center gap-1 rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 ring-1 ring-inset ring-red-200 cursor-pointer", data: { turbo_confirm: "Delete this project?" } do %>
+      <%= button_to project_path(@project), method: :delete, class: "inline-flex items-center gap-1 rounded-md bg-red-50 dark:bg-red-950 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 ring-1 ring-inset ring-red-200 dark:ring-red-800 cursor-pointer", data: { turbo_confirm: "Delete this project?" } do %>
         <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
         </svg>
@@ -28,38 +28,61 @@
 <div class="space-y-8">
   <%# ── YouTube Preview ── %>
   <section class="max-w-sm">
-    <p class="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Preview</p>
+    <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Preview</p>
     <div class="rounded-xl overflow-hidden">
-      <% if @project.thumbnail.attached? %>
-        <%= image_tag @project.thumbnail, class: "w-full aspect-video object-cover rounded-xl" %>
-      <% else %>
-        <div class="w-full aspect-video bg-zinc-200 rounded-xl flex items-center justify-center">
-          <svg class="h-8 w-8 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
-          </svg>
-        </div>
+      <%= form_with model: @project, id: "thumbnail-upload-form", class: "hidden" do |f| %>
+        <%= f.file_field :thumbnail, accept: "image/png,image/jpeg,image/webp", id: "thumbnail-input", onchange: "this.form.requestSubmit()" %>
       <% end %>
-      <div class="mt-2.5 flex gap-2.5">
-        <% if @project.channel&.thumbnail_url.present? %>
-          <img src="<%= @project.channel.thumbnail_url %>" class="h-9 w-9 rounded-full shrink-0 mt-0.5" referrerpolicy="no-referrer">
+      <div class="relative group cursor-pointer" onclick="document.getElementById('thumbnail-input').click()">
+        <% if @project.thumbnail.attached? %>
+          <%= image_tag @project.thumbnail, class: "w-full aspect-video object-cover rounded-xl" %>
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-xl transition-all flex items-center justify-center">
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-3">
+              <span class="inline-flex items-center gap-1 rounded-md bg-white/90 px-2.5 py-1.5 text-xs font-medium text-zinc-700">
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                Replace
+              </span>
+              <%= button_to remove_thumbnail_project_path(@project), method: :delete, class: "inline-flex items-center gap-1 rounded-md bg-red-500/90 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-red-600 cursor-pointer", data: { turbo_confirm: "Remove thumbnail?" }, onclick: "event.stopPropagation()" do %>
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+                Remove
+              <% end %>
+            </div>
+          </div>
         <% else %>
-          <div class="h-9 w-9 rounded-full bg-zinc-300 shrink-0 mt-0.5"></div>
+          <div class="w-full aspect-video bg-zinc-200 dark:bg-zinc-700 rounded-xl flex flex-col items-center justify-center gap-2 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-600 transition-colors">
+            <svg class="h-8 w-8 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-500 dark:group-hover:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="text-xs font-medium text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-500 dark:group-hover:text-zinc-400">Click to upload thumbnail</span>
+          </div>
+        <% end %>
+      </div>
+      <% preview_channel = @project.channel || current_user.own_channel %>
+      <div class="mt-2.5 flex gap-2.5">
+        <% if preview_channel&.thumbnail_url.present? %>
+          <img src="<%= preview_channel.thumbnail_url %>" class="h-9 w-9 rounded-full shrink-0 mt-0.5" referrerpolicy="no-referrer">
+        <% else %>
+          <div class="h-9 w-9 rounded-full bg-zinc-300 dark:bg-zinc-600 shrink-0 mt-0.5"></div>
         <% end %>
         <div class="min-w-0">
-          <p class="text-sm font-medium text-zinc-900 leading-snug line-clamp-2"><%= @project.chosen_title.presence || @project.title %></p>
-          <p class="text-xs text-zinc-500 mt-0.5"><%= @project.channel&.title || "Your Channel" %></p>
+          <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2"><%= @project.title %></p>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><%= preview_channel&.title || "Your Channel" %></p>
         </div>
       </div>
     </div>
   </section>
 
   <%# ── Checklist ── %>
-  <section class="rounded-lg border border-zinc-200 bg-white">
-    <div class="border-b border-zinc-100 px-5 py-3">
+  <section class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+    <div class="border-b border-zinc-100 dark:border-zinc-800 px-5 py-3">
       <% done, total = @project.progress %>
       <div class="flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-zinc-900">Progress</h2>
-        <span class="text-xs text-zinc-400"><%= done %>/<%= total %></span>
+        <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Progress</h2>
+        <span class="text-xs text-zinc-400 dark:text-zinc-500"><%= done %>/<%= total %></span>
       </div>
     </div>
     <div class="p-5">
@@ -74,21 +97,21 @@
             [:checklist_published, "Published"]
           ].each do |field, label| %>
             <label class="flex items-center gap-2 cursor-pointer py-1">
-              <%= f.check_box field, class: "rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500", onchange: "this.form.requestSubmit()" %>
-              <span class="text-sm text-zinc-700"><%= label %></span>
+              <%= f.check_box field, class: "rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:ring-zinc-500", onchange: "this.form.requestSubmit()" %>
+              <span class="text-sm text-zinc-700 dark:text-zinc-300"><%= label %></span>
             </label>
           <% end %>
         </div>
-        <noscript><%= f.submit "Save", class: "mt-2 inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 cursor-pointer" %></noscript>
+        <noscript><%= f.submit "Save", class: "mt-2 inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" %></noscript>
       <% end %>
     </div>
   </section>
 
   <%# ── Research / Inspirations ── %>
-  <section class="rounded-lg border border-zinc-200 bg-white">
-    <div class="border-b border-zinc-100 px-5 py-3 flex items-center justify-between">
-      <h2 class="text-sm font-semibold text-zinc-900">Research & Inspiration</h2>
-      <span class="text-xs text-zinc-400"><%= @inspirations.count %> video<%= @inspirations.count == 1 ? "" : "s" %></span>
+  <section class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+    <div class="border-b border-zinc-100 dark:border-zinc-800 px-5 py-3 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Research & Inspiration</h2>
+      <span class="text-xs text-zinc-400 dark:text-zinc-500"><%= @inspirations.count %> video<%= @inspirations.count == 1 ? "" : "s" %></span>
     </div>
     <div class="p-5">
       <% if @inspirations.any? %>
@@ -99,77 +122,40 @@
         </div>
       <% end %>
 
-      <div class="rounded-md border border-dashed border-zinc-300 p-4">
-        <p class="text-xs font-medium text-zinc-500 mb-2">Add inspiration video</p>
+      <div class="rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 p-4">
+        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">Add inspiration video</p>
         <%= form_with url: project_inspirations_path(@project), method: :post, class: "flex gap-2" do |f| %>
-          <input type="text" name="video_url" placeholder="YouTube URL or search by title..." class="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none">
+          <input type="text" name="video_url" placeholder="YouTube URL or search by title..." class="flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none">
           <button type="submit" class="inline-flex items-center rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 cursor-pointer">Add</button>
         <% end %>
-        <p class="mt-1.5 text-[11px] text-zinc-400">Paste a YouTube URL or enter a video title to search your tracked videos</p>
+        <p class="mt-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">Paste a YouTube URL or enter a video title to search your tracked videos</p>
       </div>
     </div>
   </section>
 
   <%# ── Gap Analysis + Angle ── %>
-  <section class="rounded-lg border border-zinc-200 bg-white">
-    <div class="border-b border-zinc-100 px-5 py-3 flex items-center justify-between">
-      <h2 class="text-sm font-semibold text-zinc-900">Gap Analysis & Angle</h2>
+  <section class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+    <div class="border-b border-zinc-100 dark:border-zinc-800 px-5 py-3 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Gap Analysis & Angle</h2>
       <% if @project.inspiration_videos.any? %>
-        <%= button_to "Generate with AI", generate_analysis_project_path(@project), method: :post, class: "inline-flex items-center gap-1 rounded-md bg-violet-50 px-2.5 py-1 text-[11px] font-medium text-violet-700 ring-1 ring-inset ring-violet-200 hover:bg-violet-100 cursor-pointer" %>
+        <%= button_to "Generate with AI", generate_analysis_project_path(@project), method: :post, class: "inline-flex items-center gap-1 rounded-md bg-violet-50 dark:bg-violet-950 px-2.5 py-1 text-[11px] font-medium text-violet-700 dark:text-violet-400 ring-1 ring-inset ring-violet-200 dark:ring-violet-800 hover:bg-violet-100 dark:hover:bg-violet-900 cursor-pointer" %>
       <% end %>
     </div>
     <div class="p-5 space-y-4">
       <%= form_with model: @project, class: "space-y-4" do |f| %>
         <div>
-          <%= f.label :gap_analysis, "Gap Analysis", class: "block text-xs font-medium text-zinc-500 mb-1" %>
-          <%= f.text_area :gap_analysis, rows: 4, class: "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "What's missing from existing top performers?" %>
+          <%= f.label :gap_analysis, "Gap Analysis", class: "block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1" %>
+          <%= f.text_area :gap_analysis, rows: 4, class: "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "What's missing from existing top performers?" %>
         </div>
         <div>
-          <%= f.label :angle, "Your Angle", class: "block text-xs font-medium text-zinc-500 mb-1" %>
-          <%= f.text_area :angle, rows: 3, class: "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "How will you differentiate?" %>
+          <%= f.label :angle, "Your Angle", class: "block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1" %>
+          <%= f.text_area :angle, rows: 3, class: "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "How will you differentiate?" %>
         </div>
-        <%= f.submit "Save", class: "inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 cursor-pointer" %>
+        <%= f.submit "Save", class: "inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" %>
       <% end %>
     </div>
   </section>
 
-  <%# ── Title Candidates ── %>
-  <section class="rounded-lg border border-zinc-200 bg-white">
-    <div class="border-b border-zinc-100 px-5 py-3">
-      <h2 class="text-sm font-semibold text-zinc-900">Title Candidates</h2>
-    </div>
-    <div class="p-5">
-      <%= form_with model: @project, class: "space-y-3" do |f| %>
-        <% (1..3).each do |n| %>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-medium text-zinc-400 w-4"><%= n %>.</span>
-            <%= f.text_field :"title_candidate_#{n}", class: "flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "Title option #{n}" %>
-          </div>
-        <% end %>
-        <div class="pt-2 border-t border-zinc-100">
-          <%= f.label :chosen_title, "Chosen Title", class: "block text-xs font-medium text-zinc-500 mb-1" %>
-          <%= f.text_field :chosen_title, class: "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "Your final title choice" %>
-        </div>
-        <%= f.submit "Save", class: "mt-3 inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 cursor-pointer" %>
-      <% end %>
-    </div>
-  </section>
 
-  <%# ── Thumbnail ── %>
-  <section class="rounded-lg border border-zinc-200 bg-white">
-    <div class="border-b border-zinc-100 px-5 py-3">
-      <h2 class="text-sm font-semibold text-zinc-900">Thumbnail</h2>
-    </div>
-    <div class="p-5">
-      <% if @project.thumbnail.attached? %>
-        <div class="mb-4">
-          <%= image_tag @project.thumbnail, class: "rounded-lg border border-zinc-200 max-w-md w-full aspect-video object-cover" %>
-        </div>
-      <% end %>
-      <%= form_with model: @project, class: "flex items-center gap-3" do |f| %>
-        <%= f.file_field :thumbnail, accept: "image/png,image/jpeg,image/webp", class: "block text-sm text-zinc-500 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 file:cursor-pointer" %>
-        <%= f.submit "Upload", class: "inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 cursor-pointer" %>
-      <% end %>
-    </div>
-  </section>
+
 </div>
