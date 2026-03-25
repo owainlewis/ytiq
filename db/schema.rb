@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_20_212000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_24_151935) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -115,8 +115,29 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_20_212000) do
     t.boolean "checklist_published", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "script_hook"
+    t.text "script_cta"
     t.index ["channel_id"], name: "index_projects_on_channel_id"
     t.index ["user_id"], name: "index_projects_on_user_id"
+  end
+
+  create_table "script_sections", force: :cascade do |t|
+    t.string "title"
+    t.text "body"
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "script_id"
+    t.index ["script_id"], name: "index_script_sections_on_script_id"
+  end
+
+  create_table "scripts", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.text "hook"
+    t.text "cta"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_scripts_on_project_id"
   end
 
   create_table "user_channels", force: :cascade do |t|
@@ -177,6 +198,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_20_212000) do
   add_foreign_key "project_inspirations", "videos", on_delete: :cascade
   add_foreign_key "projects", "channels"
   add_foreign_key "projects", "users"
+  add_foreign_key "script_sections", "scripts"
+  add_foreign_key "scripts", "projects"
   add_foreign_key "user_channels", "channels"
   add_foreign_key "user_channels", "users"
   add_foreign_key "users", "channels", column: "own_channel_id", on_delete: :nullify

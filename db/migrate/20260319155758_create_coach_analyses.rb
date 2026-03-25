@@ -14,7 +14,7 @@ class CreateCoachAnalyses < ActiveRecord::Migration[8.0]
     end
 
     add_index :coach_analyses,
-              [:analyzable_type, :analyzable_id, :user_id, :analysis_type],
+              [ :analyzable_type, :analyzable_id, :user_id, :analysis_type ],
               name: "idx_coach_analyses_lookup"
   end
 end

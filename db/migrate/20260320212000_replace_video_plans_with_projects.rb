@@ -31,6 +31,6 @@ class ReplaceVideoPlansWithProjects < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :project_inspirations, [:project_id, :video_id], unique: true
+    add_index :project_inspirations, [ :project_id, :video_id ], unique: true
   end
 end

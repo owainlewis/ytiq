@@ -133,29 +133,78 @@
     </div>
   </section>
 
-  <%# ── Gap Analysis + Angle ── %>
+  <%# ── Script ── %>
   <section class="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
     <div class="border-b border-zinc-100 dark:border-zinc-800 px-5 py-3 flex items-center justify-between">
-      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Gap Analysis & Angle</h2>
-      <% if @project.inspiration_videos.any? %>
-        <%= button_to "Generate with AI", generate_analysis_project_path(@project), method: :post, class: "inline-flex items-center gap-1 rounded-md bg-violet-50 dark:bg-violet-950 px-2.5 py-1 text-[11px] font-medium text-violet-700 dark:text-violet-400 ring-1 ring-inset ring-violet-200 dark:ring-violet-800 hover:bg-violet-100 dark:hover:bg-violet-900 cursor-pointer" %>
-      <% end %>
+      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Script</h2>
     </div>
-    <div class="p-5 space-y-4">
-      <%= form_with model: @project, class: "space-y-4" do |f| %>
-        <div>
-          <%= f.label :gap_analysis, "Gap Analysis", class: "block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1" %>
-          <%= f.text_area :gap_analysis, rows: 4, class: "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "What's missing from existing top performers?" %>
+    <div class="p-5 space-y-6">
+      <%# ── Hook ── %>
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-200 dark:ring-amber-800">Hook</span>
+          <span class="text-[11px] text-zinc-400 dark:text-zinc-500">The first 30 seconds — grab attention and make the promise</span>
         </div>
-        <div>
-          <%= f.label :angle, "Your Angle", class: "block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1" %>
-          <%= f.text_area :angle, rows: 3, class: "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none", placeholder: "How will you differentiate?" %>
+        <%= form_with model: @script, url: project_script_path(@project), method: :patch, class: "space-y-2" do |f| %>
+          <%= f.text_area :hook, rows: 2, class: "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none overflow-hidden resize-none", placeholder: "What stops the scroll? What's the promise that keeps them watching?", data: { controller: "autogrow", action: "input->autogrow#resize" } %>
+          <%= f.submit "Save", class: "inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" %>
+        <% end %>
+      </div>
+
+      <%# ── Sections ── %>
+      <div class="border-t border-zinc-100 dark:border-zinc-800 pt-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Sections</span>
+            <span class="text-[11px] text-zinc-400 dark:text-zinc-500">The body of your video — add sections as needed</span>
+          </div>
+          <%= button_to project_script_sections_path(@project), method: :post, class: "inline-flex items-center gap-1 rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" do %>
+            <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Section
+          <% end %>
         </div>
-        <%= f.submit "Save", class: "inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" %>
-      <% end %>
+
+        <% if @script_sections.any? %>
+          <div class="space-y-4">
+            <% @script_sections.each_with_index do |section, i| %>
+              <div id="section_<%= section.id %>" class="rounded-md border border-zinc-200 dark:border-zinc-700 p-4">
+                <%= form_with model: section, url: project_script_section_path(@project, section), method: :patch, class: "space-y-4" do |f| %>
+                  <div class="flex items-center gap-2">
+                    <%= f.text_field :title, class: "flex-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none mb-4", placeholder: "Section title" %>
+                    <%= button_to project_script_section_path(@project, section), method: :delete, class: "text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 cursor-pointer", data: { turbo_confirm: "Remove this section?" } do %>
+                      <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                    <% end %>
+                  </div>
+                  <%= f.text_area :body, rows: 2, class: "w-full rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none overflow-hidden resize-none", placeholder: "What are you covering in this section?", data: { controller: "autogrow", action: "input->autogrow#resize" } %>
+                  <%= f.submit "Save", class: "inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 py-8 flex flex-col items-center justify-center">
+            <p class="text-xs text-zinc-400 dark:text-zinc-500">No sections yet. Add your first section to start building your script.</p>
+          </div>
+        <% end %>
+      </div>
+
+      <%# ── CTA ── %>
+      <div class="border-t border-zinc-100 dark:border-zinc-800 pt-6">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 ring-1 ring-inset ring-emerald-200 dark:ring-emerald-800">CTA</span>
+          <span class="text-[11px] text-zinc-400 dark:text-zinc-500">The close — what should the viewer do next?</span>
+        </div>
+        <%= form_with model: @script, url: project_script_path(@project), method: :patch, class: "space-y-2" do |f| %>
+          <%= f.text_area :cta, rows: 2, class: "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none overflow-hidden resize-none", placeholder: "Subscribe, check the link, watch the next video...", data: { controller: "autogrow", action: "input->autogrow#resize" } %>
+          <%= f.submit "Save", class: "inline-flex items-center rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer" %>
+        <% end %>
+      </div>
     </div>
   </section>
-
 
 
 </div>
