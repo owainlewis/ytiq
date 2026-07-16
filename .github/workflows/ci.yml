@@ -5,6 +5,9 @@ on:
   push:
     branches: [ main ]
 
+env:
+  BUNDLE_PATH: vendor/gems
+
 jobs:
   scan_ruby:
     runs-on: ubuntu-latest
@@ -18,9 +21,10 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+          cache-version: 1
 
       - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
+        run: bundle exec brakeman --no-pager
 
   scan_js:
     runs-on: ubuntu-latest
@@ -34,6 +38,7 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+          cache-version: 1
 
       - name: Scan for security vulnerabilities in JavaScript dependencies
         run: bin/importmap audit
@@ -49,9 +54,10 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+          cache-version: 1
 
       - name: Lint code for consistent style
-        run: bin/rubocop -f github
+        run: bundle exec rubocop -f github
 
   test:
     runs-on: ubuntu-latest
@@ -66,12 +72,6 @@ jobs:
           - 5432:5432
         options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      # redis:
-      #   image: redis
-      #   ports:
-      #     - 6379:6379
-      #   options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config google-chrome-stable
@@ -84,13 +84,13 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+          cache-version: 1
 
       - name: Run tests
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
+        run: bundle exec rails db:test:prepare test test:system
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

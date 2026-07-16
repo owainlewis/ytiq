@@ -5,23 +5,25 @@ Rails.application.routes.draw do
 
   get "dashboard", to: "dashboard#show"
 
-  resources :channels, only: [:index, :show, :create, :destroy]
+  resources :channels, only: [ :index, :show, :create, :destroy ]
 
   get "search", to: "search#show"
 
-  resources :videos, only: [:index]
+  resources :videos, only: [ :index ]
 
-  resource :settings, only: [:show, :update]
+  resource :settings, only: [ :show, :update ]
 
-  resources :coach_analyses, only: [:index, :show, :create]
+  resources :coach_analyses, only: [ :index, :show, :create ]
 
   resources :projects do
     member do
       post :generate_analysis
       delete :remove_thumbnail
     end
-    resources :inspirations, only: [:create, :destroy],
+    resources :inspirations, only: [ :create, :destroy ],
               controller: "project_inspirations"
+    resource :script, only: [ :update ]
+    resources :script_sections, only: [ :create, :update, :destroy ]
   end
 
   resources :channels, only: [] do

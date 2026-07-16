@@ -33,7 +33,7 @@ gem "anthropic"
 gem "redcarpet"
 
 # Environment variables
-gem "dotenv-rails", groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -65,6 +65,7 @@ group :development, :test do
   gem "brakeman", require: false
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
+  gem "rubocop", require: false
   gem "rubocop-rails-omakase", require: false
 end
 
@@ -79,4 +80,4 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "mocha", "~> 3.1", :group => :test
+gem "mocha", "~> 3.1", group: :test

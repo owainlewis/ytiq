@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_action :set_project, only: [:show, :edit, :update, :destroy, :generate_analysis, :remove_thumbnail]
+  before_action :set_project, only: [ :show, :edit, :update, :destroy, :generate_analysis, :remove_thumbnail ]
 
   def index
     @pagy, @projects = pagy(current_user.projects.includes(:project_inspirations).recent, limit: 20)
@@ -7,6 +7,8 @@ class ProjectsController < ApplicationController
 
   def show
     @inspirations = @project.project_inspirations.includes(video: :channel)
+    @script = @project.script || @project.create_script!
+    @script_sections = @script.script_sections.ordered
   end
 
   def new

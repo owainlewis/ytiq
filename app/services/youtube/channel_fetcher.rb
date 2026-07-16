@@ -1,11 +1,13 @@
 module Youtube
   class ChannelFetcher
-    def initialize(client = Youtube::Client.new)
+    def initialize(client = nil)
       @client = client
     end
 
     def fetch(input)
       parsed = Youtube::UrlParser.parse(input)
+
+      @client ||= Youtube::Client.new
 
       channel_data = case parsed[:type]
       when :channel_id
