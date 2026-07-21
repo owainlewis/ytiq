@@ -26,7 +26,7 @@ gem "omniauth-rails_csrf_protection"
 gem "google-apis-youtube_v3"
 
 # Pagination
-gem "pagy", "~> 9.0"
+gem "pagy", "~> 43.5"
 
 # AI Coach
 gem "anthropic"
