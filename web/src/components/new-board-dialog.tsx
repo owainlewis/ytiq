@@ -23,7 +23,7 @@ export function NewBoardDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated?: (board: Board) => void
+  onCreated?: (board: Pick<Board, "id" | "name" | "description">) => void
   board?: Pick<Board, "id" | "name" | "description">
 }) {
   const [name, setName] = useState("")
