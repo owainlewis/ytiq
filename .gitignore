@@ -6,3 +6,6 @@ data/
 .pytest_cache/
 web/node_modules/
 web/dist/
+
+# A global "lib/" ignore would otherwise drop the UI source
+!web/src/lib/
