@@ -1,3 +1,5 @@
+import csv
+import io
 from datetime import timedelta
 
 import pytest
@@ -41,6 +43,23 @@ def test_channel_feed_and_outliers(client, fake):
 
     assert client.delete(f"/api/channels/{channels[0]['id']}").status_code == 204
     assert client.get("/api/videos").json() == []
+
+
+def test_csv_export_uses_filters(client, fake):
+    fake.add_channel()
+    for i, views in enumerate([1000, 1000, 1000, 8000]):
+        fake.add_video(f"vid{i:08d}", views, days_ago=10 + i)
+    client.post("/api/channels", json={"input": "@test"})
+
+    r = client.get("/api/videos.csv", params={"sort": "score", "min_score": 2})
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/csv")
+    assert "attachment" in r.headers["content-disposition"]
+    rows = list(csv.DictReader(io.StringIO(r.text)))
+    assert len(rows) == 1
+    assert rows[0]["outlier_score"] == "8.0"
+    assert rows[0]["url"] == "https://www.youtube.com/watch?v=vid00000003"
+    assert rows[0]["format"] == "long"
 
 
 def test_avatar_served_from_cache(client, fake):

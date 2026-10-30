@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Flame, Info } from "lucide-react"
+import { Download, Flame, Info } from "lucide-react"
 import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ChannelFilter, OptionFilter, SearchFilter, ShortsFilter, useParam } from "@/components/filters"
 import { EmptyState, PageBody, PageHeader } from "@/components/page"
 import { VideoGrid } from "@/components/video-grid"
-import { useChannels, useVideos } from "@/lib/api"
+import { useChannels, useVideos, videosCsvUrl } from "@/lib/api"
 
 const PAGE = 60
 
@@ -27,15 +27,15 @@ export function OutliersPage() {
   const [shorts] = useParam("shorts")
   const [q] = useParam("q")
   const [limit, setLimit] = useState(PAGE)
-  const { data: videos, isLoading } = useVideos({
+  const query = {
     sort,
     days,
     min_score: minScore === "any" ? "" : minScore,
     channel_id: channel,
     shorts: shorts === "true",
     q,
-    limit,
-  })
+  }
+  const { data: videos, isLoading } = useVideos({ ...query, limit })
 
   return (
     <>
@@ -43,17 +43,25 @@ export function OutliersPage() {
         title="Outliers"
         description="Videos beating their channel's usual performance."
         actions={
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="How scores work">
-                <Info />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" align="end" className="max-w-72 text-left leading-relaxed">
-              Score = views ÷ the channel's median views (its last 30 videos of the same format, 7+ days old). 2× means twice
-              the channel's normal. The clock icon marks videos under a week old, whose score is still climbing.
-            </TooltipContent>
-          </Tooltip>
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <a href={videosCsvUrl(query)} download title="Download every video matching these filters">
+                <Download />
+                Export CSV
+              </a>
+            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label="How scores work">
+                  <Info />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end" className="max-w-72 text-left leading-relaxed">
+                Score = views ÷ the channel's median views (its last 30 videos of the same format, 7+ days old). 2× means twice
+                the channel's normal. The clock icon marks videos under a week old, whose score is still climbing.
+              </TooltipContent>
+            </Tooltip>
+          </>
         }
       >
         <ToggleGroup type="single" variant="outline" size="sm" value={sort} onValueChange={(v) => v && setSort(v)} spacing={0}>

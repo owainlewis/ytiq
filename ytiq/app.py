@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 import logging
 import sqlite3
@@ -8,7 +10,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
 from ytiq import config, db, sync
@@ -202,18 +204,9 @@ def video_rows(conn, where: list[str], params: list, sort: str, limit: int, offs
     return rows
 
 
-@app.get("/api/videos")
-def list_videos(
-    sort: str = "newest",
-    days: int | None = None,
-    channel_id: str | None = None,
-    shorts: bool = False,
-    min_score: float | None = None,
-    q: str | None = None,
-    limit: int = 60,
-    offset: int = 0,
-    conn: sqlite3.Connection = Depends(get_conn),
-):
+def video_filters(
+    days: int | None, channel_id: str | None, shorts: bool, min_score: float | None, q: str | None
+) -> tuple[list[str], list]:
     where, params = [] if channel_id else ["c.tracked = 1"], []
     if not shorts:
         where.append("v.is_short = 0")
@@ -229,7 +222,67 @@ def list_videos(
     if q:
         where.append("v.title LIKE ?")
         params.append(f"%{q}%")
+    return where, params
+
+
+@app.get("/api/videos")
+def list_videos(
+    sort: str = "newest",
+    days: int | None = None,
+    channel_id: str | None = None,
+    shorts: bool = False,
+    min_score: float | None = None,
+    q: str | None = None,
+    limit: int = 60,
+    offset: int = 0,
+    conn: sqlite3.Connection = Depends(get_conn),
+):
+    where, params = video_filters(days, channel_id, shorts, min_score, q)
     return video_rows(conn, where, params, sort, min(limit, 200), offset)
+
+
+CSV_COLUMNS = [
+    ("title", "title"),
+    ("channel", "channel_title"),
+    ("published", "published_at"),
+    ("format", None),
+    ("duration_seconds", "duration_seconds"),
+    ("views", "view_count"),
+    ("likes", "like_count"),
+    ("comments", "comment_count"),
+    ("outlier_score", "outlier_score"),
+    ("views_per_day", "views_per_day"),
+    ("channel_median_views", "channel_median_views"),
+    ("channel_subscribers", "channel_subscribers"),
+    ("url", None),
+]
+
+
+@app.get("/api/videos.csv")
+def export_videos(
+    sort: str = "newest",
+    days: int | None = None,
+    channel_id: str | None = None,
+    shorts: bool = False,
+    min_score: float | None = None,
+    q: str | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+):
+    """Same filters as /api/videos, without paging, as a CSV for spreadsheets or Claude."""
+    where, params = video_filters(days, channel_id, shorts, min_score, q)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow([name for name, _ in CSV_COLUMNS])
+    for v in video_rows(conn, where, params, sort, 10_000, 0):
+        v["format"] = "short" if v["is_short"] else "long"
+        v["url"] = f"https://www.youtube.com/watch?v={v['id']}"
+        if v["outlier_score"] is not None:
+            v["outlier_score"] = round(v["outlier_score"], 2)
+        if v["views_per_day"] is not None:
+            v["views_per_day"] = round(v["views_per_day"])
+        writer.writerow([v[key or name] for name, key in CSV_COLUMNS])
+    filename = f"ytiq-videos-{sync.now():%Y-%m-%d}.csv"
+    return Response(out.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.get("/api/videos/{video_id}")
