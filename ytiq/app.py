@@ -14,6 +14,8 @@ from fastapi.responses import FileResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
 from ytiq import config, db, sync
+from ytiq.analysis import AnalysisError, Analyzer
+from ytiq.transcripts import TranscriptError, Transcripts
 from ytiq.youtube import QuotaExceeded, YouTube, YouTubeError
 
 log = logging.getLogger("ytiq")
@@ -74,6 +76,14 @@ def get_conn():
 
 def get_yt(conn: sqlite3.Connection = Depends(get_conn)) -> YouTube:
     return YouTube(conn)
+
+
+def get_transcripts() -> Transcripts:
+    return Transcripts()
+
+
+def get_analyzer() -> Analyzer:
+    return Analyzer()
 
 
 def youtube_errors(fn):
@@ -305,7 +315,52 @@ def get_video(video_id: str, conn: sqlite3.Connection = Depends(get_conn)):
             (video_id,),
         )
     ]
+    video["analysis"] = stored_analysis(conn, video_id)
     return video
+
+
+# --- Analysis ----------------------------------------------------------------
+
+def stored_analysis(conn: sqlite3.Connection, video_id: str) -> dict | None:
+    row = conn.execute(
+        "SELECT analysis, transcript IS NOT NULL AS has_transcript, model, created_at FROM video_analyses WHERE video_id = ?",
+        (video_id,),
+    ).fetchone()
+    if not row:
+        return None
+    return {**json.loads(row["analysis"]), "has_transcript": bool(row["has_transcript"]), "model": row["model"], "created_at": row["created_at"]}
+
+
+@app.post("/api/videos/{video_id}/analysis")
+def analyze_video(
+    video_id: str,
+    redo: bool = False,
+    conn: sqlite3.Connection = Depends(get_conn),
+    transcripts: Transcripts = Depends(get_transcripts),
+    analyzer: Analyzer = Depends(get_analyzer),
+):
+    """Fetch the transcript and have Claude study the video. Stored, so each video costs once unless redone."""
+    if not redo and (existing := stored_analysis(conn, video_id)):
+        return existing
+    rows = video_rows(conn, ["v.id = ?"], [video_id], "newest", 1, 0)
+    if not rows:
+        raise HTTPException(404, "Video not found")
+    video = rows[0]
+    video["description"] = conn.execute("SELECT description FROM videos WHERE id = ?", (video_id,)).fetchone()[0]
+    try:
+        analyzer.check()
+        transcript = transcripts.get(video_id)
+        result = analyzer.analyze(video, transcript)
+    except (TranscriptError, AnalysisError) as e:
+        raise HTTPException(502, str(e))
+    with db.transaction(conn):
+        conn.execute(
+            "INSERT INTO video_analyses (video_id, transcript, analysis, model, created_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(video_id) DO UPDATE SET transcript = excluded.transcript, analysis = excluded.analysis, "
+            "model = excluded.model, created_at = excluded.created_at",
+            (video_id, transcript, result.model_dump_json(), analyzer.model, sync.ts(sync.now())),
+        )
+    return stored_analysis(conn, video_id)
 
 
 # --- Boards ------------------------------------------------------------------

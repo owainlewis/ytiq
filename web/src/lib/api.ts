@@ -28,6 +28,19 @@ export type VideoDetail = Video & {
   description: string
   snapshots: { taken_at: string; view_count: number }[]
   boards: { id: number; name: string; note: string }[]
+  analysis: Analysis | null
+}
+
+export type Analysis = {
+  summary: string
+  topic: string
+  angle: string
+  format: string
+  main_points: string[]
+  hook: { spoken: string; visual: string; why_it_works: string }
+  has_transcript: boolean
+  model: string
+  created_at: string
 }
 
 export type Channel = {
@@ -220,6 +233,18 @@ export function useBoardItem() {
         ? request<null>(`/boards/${boardId}/items/${video}`, { method: "DELETE" })
         : request<{ video_id: string }>(`/boards/${boardId}/items`, { method: "POST", json: { video } }),
     onSuccess: () => qc.invalidateQueries(),
+    onError,
+  })
+}
+
+/** Transcript + Claude analysis. Takes a while: up to a minute, longer for videos over 20 minutes. */
+export function useAnalyze() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ videoId, redo }: { videoId: string; redo?: boolean }) =>
+      request<Analysis>(`/videos/${videoId}/analysis${redo ? "?redo=true" : ""}`, { method: "POST" }),
+    onSuccess: (analysis, v) =>
+      qc.setQueryData<VideoDetail>(["video", v.videoId], (old) => (old ? { ...old, analysis } : old)),
     onError,
   })
 }

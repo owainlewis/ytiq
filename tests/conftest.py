@@ -3,6 +3,9 @@ from datetime import timedelta
 import httpx
 import pytest
 
+from fastapi.testclient import TestClient
+
+from ytiq import app as app_module
 from ytiq import config, db, sync
 from ytiq.youtube import YouTube
 
@@ -104,3 +107,15 @@ def fake():
 @pytest.fixture
 def yt(conn, fake):
     return YouTube(conn, api_key="test", http=httpx.Client(transport=httpx.MockTransport(fake.handler)))
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch, yt, fake):
+    path = tmp_path / "test.db"
+    monkeypatch.setattr(db.config, "DB_PATH", path)
+    app_module.app.state.refresh_on_start = False
+    # Route the API's YouTube client through the fake, against the test database.
+    app_module.app.dependency_overrides[app_module.get_yt] = lambda: YouTube(db.connect(path), api_key="test", http=yt.http)
+    with TestClient(app_module.app) as c:
+        yield c
+    app_module.app.dependency_overrides.clear()

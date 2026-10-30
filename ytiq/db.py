@@ -64,6 +64,14 @@ CREATE TABLE IF NOT EXISTS board_items (
     PRIMARY KEY (board_id, video_id)
 );
 
+CREATE TABLE IF NOT EXISTS video_analyses (
+    video_id    TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
+    transcript  TEXT,                              -- NULL when the video has none
+    analysis    TEXT NOT NULL,                     -- JSON, see analysis.Analysis
+    model       TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS quota_usage (
     day   TEXT PRIMARY KEY,                        -- Pacific date, matches YouTube's reset
     units INTEGER NOT NULL DEFAULT 0

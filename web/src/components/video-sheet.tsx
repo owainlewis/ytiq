@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Bookmark, ExternalLink, Trash2, X } from "lucide-react"
+import { Bookmark, ExternalLink, Loader2, RotateCw, Sparkles, Trash2, X } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { ScoreBadge } from "@/components/score-badge"
 import { SaveMenu } from "@/components/save-menu"
 import { Sparkline } from "@/components/sparkline"
 import { ChannelAvatar, useOpenVideo } from "@/components/video-card"
-import { useBoardItem, useUpdateNote, useVideo, type VideoDetail } from "@/lib/api"
+import { useAnalyze, useBoardItem, useUpdateNote, useVideo, type VideoDetail } from "@/lib/api"
 import { ago, compact, duration } from "@/lib/format"
 
 /** Video detail, opened from anywhere via the ?v=<id> search param. */
@@ -116,6 +116,8 @@ function Detail({ video }: { video: VideoDetail }) {
           {compact(video.like_count)} likes · {compact(video.comment_count)} comments
         </p>
 
+        <AnalysisSection video={video} />
+
         <section>
           <h3 className="mb-2 text-sm font-medium">Growth</h3>
           <Sparkline points={video.snapshots} />
@@ -142,6 +144,75 @@ function Detail({ video }: { video: VideoDetail }) {
         )}
       </div>
     </>
+  )
+}
+
+function AnalysisSection({ video }: { video: VideoDetail }) {
+  const analyze = useAnalyze()
+  const a = video.analysis
+  const run = (redo = false) => analyze.mutate({ videoId: video.id, redo })
+
+  if (!a) {
+    return (
+      <section className="flex flex-col items-start gap-2 rounded-xl border border-dashed p-4">
+        <h3 className="text-sm font-medium">Analysis</h3>
+        <p className="text-sm text-muted-foreground">
+          Reads the transcript and thumbnail, then breaks down the topic, angle, main points and hook.
+        </p>
+        <Button size="sm" onClick={() => run()} disabled={analyze.isPending}>
+          {analyze.isPending ? <Loader2 className="animate-spin" /> : <Sparkles />}
+          {analyze.isPending ? "Analyzing… this can take a minute" : "Analyze"}
+        </Button>
+      </section>
+    )
+  }
+
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-medium">Analysis</h3>
+        <Button size="xs" variant="ghost" onClick={() => run(true)} disabled={analyze.isPending}>
+          {analyze.isPending ? <Loader2 className="animate-spin" /> : <RotateCw />}
+          Redo
+        </Button>
+      </div>
+      <p className="text-sm">{a.summary}</p>
+      {!a.has_transcript && (
+        <p className="text-xs text-muted-foreground">No transcript was available, so this is based on the title, description and thumbnail.</p>
+      )}
+      <dl className="grid gap-3 sm:grid-cols-3">
+        <Field label="Topic">{a.topic}</Field>
+        <Field label="Angle" className="sm:col-span-2">
+          {a.angle}
+        </Field>
+        <Field label="Format">{a.format}</Field>
+      </dl>
+      <div className="rounded-xl border bg-card p-3">
+        <h4 className="mb-2 text-xs font-medium text-muted-foreground uppercase">Hook</h4>
+        <dl className="flex flex-col gap-2 text-sm">
+          <Field label="Spoken">“{a.hook.spoken}”</Field>
+          <Field label="Visual (thumbnail and title)">{a.hook.visual}</Field>
+          <Field label="Why it works">{a.hook.why_it_works}</Field>
+        </dl>
+      </div>
+      <div>
+        <h4 className="mb-2 text-xs font-medium text-muted-foreground uppercase">Main points</h4>
+        <ol className="list-decimal space-y-1 pl-5 text-sm">
+          {a.main_points.map((p, i) => (
+            <li key={i}>{p}</li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+function Field({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={className}>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-sm">{children}</dd>
+    </div>
   )
 }
 
