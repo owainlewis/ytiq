@@ -49,6 +49,15 @@ def test_csv_export_uses_filters(client, fake):
     assert rows[0]["format"] == "long"
 
 
+def test_csv_safe_neutralises_formulas():
+    from ytiq.app import csv_safe
+
+    assert csv_safe('=HYPERLINK("http://x")') == '\'=HYPERLINK("http://x")'
+    assert csv_safe("-5 tips") == "'-5 tips"
+    assert csv_safe("Normal title") == "Normal title"
+    assert csv_safe(42) == 42
+
+
 def test_avatar_served_from_cache(client, fake):
     fake.add_channel()
     channel = client.post("/api/channels", json={"input": "@test"}).json()

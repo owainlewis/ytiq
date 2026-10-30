@@ -116,7 +116,7 @@ function Detail({ video }: { video: VideoDetail }) {
           {compact(video.like_count)} likes · {compact(video.comment_count)} comments
         </p>
 
-        <AnalysisSection video={video} />
+        <AnalysisSection key={video.id} video={video} />
 
         <section>
           <h3 className="mb-2 text-sm font-medium">Growth</h3>
@@ -190,7 +190,7 @@ function AnalysisSection({ video }: { video: VideoDetail }) {
       <div className="rounded-xl border bg-card p-3">
         <h4 className="mb-2 text-xs font-medium text-muted-foreground uppercase">Hook</h4>
         <dl className="flex flex-col gap-2 text-sm">
-          <Field label="Spoken">“{a.hook.spoken}”</Field>
+          {a.hook.spoken && <Field label="Spoken">“{a.hook.spoken}”</Field>}
           <Field label="Visual (thumbnail and title)">{a.hook.visual}</Field>
           <Field label="Why it works">{a.hook.why_it_works}</Field>
         </dl>

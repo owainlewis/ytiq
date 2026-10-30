@@ -32,17 +32,17 @@ class Transcripts:
         if not self.api_key:
             raise TranscriptError("SUPADATA_API_KEY is not set. Add it to .env to analyze videos.")
         params = {"url": f"https://www.youtube.com/watch?v={video_id}", "text": "true", "mode": "auto"}
-        r = self._get("/transcript", params)
-        if r.status_code == 206:
+        status, body = self._get("/transcript", params)
+        if status == 206:
             return None
-        if r.status_code == 202:
-            return self._wait(r.json()["jobId"])
-        return r.json().get("content") or None
+        if status == 202:
+            return self._wait(body["jobId"])
+        return body.get("content") or None
 
     def _wait(self, job_id: str) -> str | None:
         deadline = time.monotonic() + POLL_TIMEOUT
         while time.monotonic() < deadline:
-            job = self._get(f"/transcript/{job_id}").json()
+            _, job = self._get(f"/transcript/{job_id}")
             if job["status"] == "completed":
                 return job.get("content") or None
             if job["status"] == "failed":
@@ -53,12 +53,18 @@ class Transcripts:
             self.sleep(POLL_SECONDS)
         raise TranscriptError("Timed out waiting for the transcript")
 
-    def _get(self, path: str, params: dict | None = None) -> httpx.Response:
-        r = self.http.get(API + path, params=params, headers={"x-api-key": self.api_key})
+    def _get(self, path: str, params: dict | None = None) -> tuple[int, dict]:
+        try:
+            r = self.http.get(API + path, params=params, headers={"x-api-key": self.api_key})
+        except httpx.HTTPError as e:
+            raise TranscriptError(f"Could not reach Supadata: {e}") from e
+        try:
+            body = r.json() if r.content else {}
+        except ValueError:
+            body = {}
         if r.status_code >= 400:
-            try:
-                message = r.json().get("message") or r.text
-            except ValueError:
-                message = r.text
-            raise TranscriptError(f"Supadata error {r.status_code}: {message}")
-        return r
+            raise TranscriptError(f"Supadata error {r.status_code}: {body.get('message') or r.text}")
+        is_job_poll = path != "/transcript"
+        if (r.status_code == 202 and "jobId" not in body) or (is_job_poll and "status" not in body):
+            raise TranscriptError(f"Unexpected response from Supadata: {r.text[:200]}")
+        return r.status_code, body

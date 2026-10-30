@@ -4,14 +4,21 @@ One request per video. Claude gets the title, description, thumbnail and
 transcript, and returns a fixed structure so the UI can lay it out.
 """
 
+import base64
+
 import anthropic
+import httpx
+import pydantic
 from pydantic import BaseModel, Field
 
 from ytiq import config
 
 
 class Hook(BaseModel):
-    spoken: str = Field(description="The opening line(s), quoted or closely paraphrased from the first seconds of the transcript.")
+    spoken: str | None = Field(
+        description="The opening line(s), quoted or closely paraphrased from the first seconds of the transcript. "
+        "null when there is no transcript: never invent one."
+    )
     visual: str = Field(description="What the thumbnail and title promise at a glance, and how they work together.")
     why_it_works: str = Field(description="Why the hook makes a viewer click and keep watching.")
 
@@ -35,9 +42,10 @@ class AnalysisError(Exception):
 
 
 class Analyzer:
-    def __init__(self, client: anthropic.Anthropic | None = None, model: str | None = None):
+    def __init__(self, client: anthropic.Anthropic | None = None, model: str | None = None, http: httpx.Client | None = None):
         self.client = client
         self.model = model or config.ANALYSIS_MODEL
+        self.http = http or httpx.Client(timeout=10, follow_redirects=True)
 
     def check(self) -> None:
         """Fail before spending a transcript credit if Claude can't be called."""
@@ -63,8 +71,8 @@ class Analyzer:
             details += "No transcript is available. Work from the title, description and thumbnail, and say so in the summary."
 
         content: list[dict] = []
-        if video["thumbnail_url"]:
-            content.append({"type": "image", "source": {"type": "url", "url": video["thumbnail_url"]}})
+        if thumbnail := self.thumbnail(video["thumbnail_url"]):
+            content.append(thumbnail)
         content.append({"type": "text", "text": details})
 
         try:
@@ -75,6 +83,8 @@ class Analyzer:
                 messages=[{"role": "user", "content": content}],
                 output_format=Analysis,
             )
+        except pydantic.ValidationError as e:
+            raise AnalysisError("Claude's answer was cut off or incomplete. Try again.") from e
         except anthropic.APIStatusError as e:
             raise AnalysisError(f"Claude error {e.status_code}: {e.message}") from e
         except anthropic.APIConnectionError as e:
@@ -82,3 +92,18 @@ class Analyzer:
         if response.stop_reason == "refusal" or response.parsed_output is None:
             raise AnalysisError("Claude could not analyze this video.")
         return response.parsed_output
+
+    def thumbnail(self, url: str | None) -> dict | None:
+        """The thumbnail as an image block. It's helpful context, so a failed download just leaves it out."""
+        if not url:
+            return None
+        try:
+            r = self.http.get(url)
+            r.raise_for_status()
+        except httpx.HTTPError:
+            return None
+        media_type = r.headers.get("content-type", "image/jpeg").split(";")[0]
+        if media_type not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
+            return None
+        data = base64.standard_b64encode(r.content).decode()
+        return {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": data}}

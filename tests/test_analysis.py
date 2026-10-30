@@ -116,11 +116,11 @@ def test_analyze_stores_and_reuses(client, fake, services):
 
     assert client.get(f"/api/videos/{vid}").json()["analysis"]["angle"] == "Beginner friendly"
 
-    # Stored: a second click costs nothing; redo runs it again.
+    # Stored: a second click costs nothing. Redo asks Claude again but reuses the transcript.
     client.post(f"/api/videos/{vid}/analysis")
-    assert transcripts.calls == 1
+    assert transcripts.calls == 1 and len(analyzer.seen) == 1
     client.post(f"/api/videos/{vid}/analysis", params={"redo": True})
-    assert transcripts.calls == 2
+    assert transcripts.calls == 1 and len(analyzer.seen) == 2
 
 
 def test_analyze_without_transcript(client, fake, services):
@@ -137,3 +137,48 @@ def test_analyze_errors(client, fake, services):
     assert r.status_code == 502 and "ANTHROPIC_API_KEY" in r.json()["detail"]
     assert services[0].calls == 0  # no transcript credit spent
     assert client.get(f"/api/videos/{vid}").json()["analysis"] is None
+
+
+def test_transcript_network_and_bad_body_errors():
+    def boom(request):
+        raise httpx.ConnectError("down")
+
+    t = Transcripts(api_key="key", http=httpx.Client(transport=httpx.MockTransport(boom)))
+    with pytest.raises(TranscriptError, match="Could not reach Supadata"):
+        t.get("abcdefghijk")
+    t, _ = supadata([httpx.Response(202, json={})])
+    with pytest.raises(TranscriptError, match="Unexpected response"):
+        t.get("abcdefghijk")
+
+
+def test_failed_analysis_keeps_paid_transcript(client, fake, services):
+    transcripts, _ = services
+    vid = add_video(client, fake)
+    failing = FakeAnalyzer()
+    failing.analyze = lambda video, transcript: (_ for _ in ()).throw(AnalysisError("overloaded"))
+    app_module.app.dependency_overrides[app_module.get_analyzer] = lambda: failing
+    assert client.post(f"/api/videos/{vid}/analysis").status_code == 502
+
+    app_module.app.dependency_overrides[app_module.get_analyzer] = lambda: FakeAnalyzer()
+    assert client.post(f"/api/videos/{vid}/analysis").status_code == 200
+    assert transcripts.calls == 1  # the retry reused the stored transcript
+
+
+def test_cut_off_answer_is_analysis_error():
+    import anthropic
+    import httpx2
+
+    from ytiq.analysis import Analyzer
+
+    def handler(request):
+        return httpx2.Response(200, json={
+            "id": "m", "type": "message", "role": "assistant", "model": "x",
+            "content": [{"type": "text", "text": '{"summary": "cut'}],
+            "stop_reason": "max_tokens", "stop_sequence": None, "usage": {"input_tokens": 1, "output_tokens": 1},
+        })
+
+    claude = anthropic.Anthropic(api_key="x", http_client=anthropic.DefaultHttpxClient(transport=httpx2.MockTransport(handler)))
+    video = {"title": "T", "channel_title": "C", "view_count": 1, "outlier_score": 1.0, "is_short": False,
+             "duration_seconds": 60, "description": "", "thumbnail_url": None}
+    with pytest.raises(AnalysisError, match="cut off"):
+        Analyzer(client=claude).analyze(video, "words")

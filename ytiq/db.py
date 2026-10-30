@@ -64,9 +64,15 @@ CREATE TABLE IF NOT EXISTS board_items (
     PRIMARY KEY (board_id, video_id)
 );
 
+-- Kept apart from analyses so a failed Claude call doesn't throw away a paid transcript.
+CREATE TABLE IF NOT EXISTS video_transcripts (
+    video_id    TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
+    content     TEXT,                              -- NULL when the video has none
+    fetched_at  TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS video_analyses (
     video_id    TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
-    transcript  TEXT,                              -- NULL when the video has none
     analysis    TEXT NOT NULL,                     -- JSON, see analysis.Analysis
     model       TEXT NOT NULL,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))

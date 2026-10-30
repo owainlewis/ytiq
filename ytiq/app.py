@@ -78,12 +78,17 @@ def get_yt(conn: sqlite3.Connection = Depends(get_conn)) -> YouTube:
     return YouTube(conn)
 
 
+# One of each for the app, so their HTTP connection pools are reused.
+_transcripts = Transcripts()
+_analyzer = Analyzer()
+
+
 def get_transcripts() -> Transcripts:
-    return Transcripts()
+    return _transcripts
 
 
 def get_analyzer() -> Analyzer:
-    return Analyzer()
+    return _analyzer
 
 
 def youtube_errors(fn):
@@ -268,6 +273,13 @@ CSV_COLUMNS = [
 ]
 
 
+def csv_safe(value):
+    """Titles come from other people. Stop Excel or Sheets running one that starts like a formula."""
+    if isinstance(value, str) and value[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + value
+    return value
+
+
 @app.get("/api/videos.csv")
 def export_videos(
     sort: str = "newest",
@@ -283,14 +295,14 @@ def export_videos(
     out = io.StringIO()
     writer = csv.writer(out)
     writer.writerow([name for name, _ in CSV_COLUMNS])
-    for v in video_rows(conn, where, params, sort, 10_000, 0):
+    for v in video_rows(conn, where, params, sort, -1, 0):  # LIMIT -1: every row
         v["format"] = "short" if v["is_short"] else "long"
         v["url"] = f"https://www.youtube.com/watch?v={v['id']}"
         if v["outlier_score"] is not None:
             v["outlier_score"] = round(v["outlier_score"], 2)
         if v["views_per_day"] is not None:
             v["views_per_day"] = round(v["views_per_day"])
-        writer.writerow([v[key or name] for name, key in CSV_COLUMNS])
+        writer.writerow([csv_safe(v[key or name]) for name, key in CSV_COLUMNS])
     filename = f"ytiq-videos-{sync.now():%Y-%m-%d}.csv"
     return Response(out.getvalue(), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
@@ -323,12 +335,32 @@ def get_video(video_id: str, conn: sqlite3.Connection = Depends(get_conn)):
 
 def stored_analysis(conn: sqlite3.Connection, video_id: str) -> dict | None:
     row = conn.execute(
-        "SELECT analysis, transcript IS NOT NULL AS has_transcript, model, created_at FROM video_analyses WHERE video_id = ?",
+        "SELECT a.analysis, t.content IS NOT NULL AS has_transcript, a.model, a.created_at "
+        "FROM video_analyses a LEFT JOIN video_transcripts t ON t.video_id = a.video_id WHERE a.video_id = ?",
         (video_id,),
     ).fetchone()
     if not row:
         return None
     return {**json.loads(row["analysis"]), "has_transcript": bool(row["has_transcript"]), "model": row["model"], "created_at": row["created_at"]}
+
+
+def transcript_for(conn: sqlite3.Connection, transcripts: Transcripts, video_id: str) -> str | None:
+    """The stored transcript, or fetch and store it. Each video's transcript is paid for once."""
+    row = conn.execute("SELECT content FROM video_transcripts WHERE video_id = ?", (video_id,)).fetchone()
+    if row:
+        return row["content"]
+    content = transcripts.get(video_id)
+    with db.transaction(conn):
+        conn.execute(
+            "INSERT OR REPLACE INTO video_transcripts (video_id, content, fetched_at) VALUES (?, ?, ?)",
+            (video_id, content, sync.ts(sync.now())),
+        )
+    return content
+
+
+# One analysis per video at a time, so a double click or a second tab doesn't pay twice.
+_analysis_locks: dict[str, threading.Lock] = {}
+_analysis_locks_guard = threading.Lock()
 
 
 @app.post("/api/videos/{video_id}/analysis")
@@ -340,27 +372,29 @@ def analyze_video(
     analyzer: Analyzer = Depends(get_analyzer),
 ):
     """Fetch the transcript and have Claude study the video. Stored, so each video costs once unless redone."""
-    if not redo and (existing := stored_analysis(conn, video_id)):
-        return existing
-    rows = video_rows(conn, ["v.id = ?"], [video_id], "newest", 1, 0)
-    if not rows:
-        raise HTTPException(404, "Video not found")
-    video = rows[0]
-    video["description"] = conn.execute("SELECT description FROM videos WHERE id = ?", (video_id,)).fetchone()[0]
-    try:
-        analyzer.check()
-        transcript = transcripts.get(video_id)
-        result = analyzer.analyze(video, transcript)
-    except (TranscriptError, AnalysisError) as e:
-        raise HTTPException(502, str(e))
-    with db.transaction(conn):
-        conn.execute(
-            "INSERT INTO video_analyses (video_id, transcript, analysis, model, created_at) VALUES (?, ?, ?, ?, ?) "
-            "ON CONFLICT(video_id) DO UPDATE SET transcript = excluded.transcript, analysis = excluded.analysis, "
-            "model = excluded.model, created_at = excluded.created_at",
-            (video_id, transcript, result.model_dump_json(), analyzer.model, sync.ts(sync.now())),
-        )
-    return stored_analysis(conn, video_id)
+    with _analysis_locks_guard:
+        lock = _analysis_locks.setdefault(video_id, threading.Lock())
+    with lock:
+        if not redo and (existing := stored_analysis(conn, video_id)):
+            return existing
+        rows = video_rows(conn, ["v.id = ?"], [video_id], "newest", 1, 0)
+        if not rows:
+            raise HTTPException(404, "Video not found")
+        video = rows[0]
+        video["description"] = conn.execute("SELECT description FROM videos WHERE id = ?", (video_id,)).fetchone()[0]
+        try:
+            analyzer.check()
+            transcript = transcript_for(conn, transcripts, video_id)
+            result = analyzer.analyze(video, transcript)
+        except (TranscriptError, AnalysisError) as e:
+            raise HTTPException(502, str(e))
+        with db.transaction(conn):
+            conn.execute(
+                "INSERT INTO video_analyses (video_id, analysis, model, created_at) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(video_id) DO UPDATE SET analysis = excluded.analysis, model = excluded.model, created_at = excluded.created_at",
+                (video_id, result.model_dump_json(), analyzer.model, sync.ts(sync.now())),
+            )
+        return stored_analysis(conn, video_id)
 
 
 # --- Boards ------------------------------------------------------------------

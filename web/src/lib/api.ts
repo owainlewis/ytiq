@@ -37,7 +37,7 @@ export type Analysis = {
   angle: string
   format: string
   main_points: string[]
-  hook: { spoken: string; visual: string; why_it_works: string }
+  hook: { spoken: string | null; visual: string; why_it_works: string }
   has_transcript: boolean
   model: string
   created_at: string
