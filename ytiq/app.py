@@ -8,15 +8,16 @@ from contextlib import asynccontextmanager
 from datetime import timedelta
 from pathlib import Path
 
+import anthropic
 import httpx
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 from pydantic import BaseModel
 
-from ytiq import config, db, sync
+from ytiq import config, db, settings, sync
 from ytiq.analysis import AnalysisError, Analyzer
 from ytiq.transcripts import TranscriptError, Transcripts
-from ytiq.youtube import QuotaExceeded, YouTube, YouTubeError
+from ytiq.youtube import QuotaExceeded, Ref, YouTube, YouTubeError
 
 log = logging.getLogger("ytiq")
 
@@ -54,10 +55,11 @@ def run_refresh(older_than: timedelta = timedelta(0)) -> bool:
 async def lifespan(app: FastAPI):
     conn = db.connect()
     db.init(conn)
+    has_key = bool(settings.get(conn, "youtube_api_key"))
     conn.close()
     # Refresh once on startup. No timer: further refreshes are manual, to save quota.
     # Channels refreshed recently are skipped so restarts (e.g. --reload) cost nothing.
-    if app.state.refresh_on_start and config.YOUTUBE_API_KEY:
+    if app.state.refresh_on_start and has_key:
         run_refresh(older_than=timedelta(hours=config.STARTUP_SKIP_HOURS))
     yield
 
@@ -78,17 +80,17 @@ def get_yt(conn: sqlite3.Connection = Depends(get_conn)) -> YouTube:
     return YouTube(conn)
 
 
-# One of each for the app, so their HTTP connection pools are reused.
-_transcripts = Transcripts()
-_analyzer = Analyzer()
+# Shared so HTTP connection pools are reused. Keys are read per request, so a key saved in Settings works at once.
+_transcripts_http = httpx.Client(timeout=60)
+_thumbnail_http = httpx.Client(timeout=10, follow_redirects=True)
 
 
-def get_transcripts() -> Transcripts:
-    return _transcripts
+def get_transcripts(conn: sqlite3.Connection = Depends(get_conn)) -> Transcripts:
+    return Transcripts(api_key=settings.get(conn, "supadata_api_key"), http=_transcripts_http)
 
 
-def get_analyzer() -> Analyzer:
-    return _analyzer
+def get_analyzer(conn: sqlite3.Connection = Depends(get_conn)) -> Analyzer:
+    return Analyzer(api_key=settings.get(conn, "anthropic_api_key"), http=_thumbnail_http)
 
 
 def youtube_errors(fn):
@@ -98,6 +100,76 @@ def youtube_errors(fn):
         raise HTTPException(429, str(e))
     except YouTubeError as e:
         raise HTTPException(400, str(e))
+
+
+# --- Settings ----------------------------------------------------------------
+
+class SettingsIn(BaseModel):
+    youtube_api_key: str | None = None
+    supadata_api_key: str | None = None
+    anthropic_api_key: str | None = None
+
+
+def settings_out(conn: sqlite3.Connection) -> dict:
+    out = {}
+    for name in settings.KEYS:
+        value = settings.get(conn, name)
+        out[name] = {"set": bool(value), "preview": settings.mask(value) if value else None, "source": settings.source(conn, name)}
+    return out
+
+
+def check_youtube_key(conn: sqlite3.Connection, key: str, http: httpx.Client | None = None) -> None:
+    """One cheap call (1 unit) to prove the key works, with a fix for each common mistake."""
+    try:
+        YouTube(conn, api_key=key, http=http).channel(Ref("handle", "YouTube"))
+    except QuotaExceeded:
+        return  # The key works; it's just out of quota for today.
+    except YouTubeError as e:
+        msg = str(e)
+        if "API key not valid" in msg or "API_KEY_INVALID" in msg:
+            raise HTTPException(400, "That key isn't valid. Copy it again from Google Cloud Console > Credentials.")
+        if "has not been used" in msg or "is disabled" in msg or "SERVICE_DISABLED" in msg:
+            raise HTTPException(
+                400,
+                "The key works, but YouTube Data API v3 isn't turned on for its project. "
+                "Enable it in Google Cloud Console > APIs & Services > Library, wait a minute, then try again.",
+            )
+        if "referer" in msg.lower() or "blocked" in msg.lower():
+            raise HTTPException(400, "This key has restrictions that block ytiq. Remove the website or IP restriction on the key.")
+        raise HTTPException(400, msg)
+    except httpx.HTTPError:
+        raise HTTPException(502, "Could not reach YouTube. Check your internet connection.")
+
+
+def check_anthropic_key(key: str) -> None:
+    try:
+        anthropic.Anthropic(api_key=key, max_retries=0, timeout=15).models.list(limit=1)
+    except anthropic.AuthenticationError:
+        raise HTTPException(400, "That Claude key isn't valid. Copy it again from console.anthropic.com > API keys.")
+    except anthropic.APIError as e:
+        raise HTTPException(502, f"Could not check the Claude key: {e}")
+
+
+def get_key_checks():
+    """Swapped out in tests so no real calls are made."""
+    return {"youtube_api_key": check_youtube_key, "anthropic_api_key": lambda conn, key: check_anthropic_key(key)}
+
+
+@app.get("/api/settings")
+def get_settings(conn: sqlite3.Connection = Depends(get_conn)):
+    return settings_out(conn)
+
+
+@app.put("/api/settings")
+def put_settings(body: SettingsIn, conn: sqlite3.Connection = Depends(get_conn), checks: dict = Depends(get_key_checks)):
+    """Save keys. Each one is checked before it's saved. An empty string clears a key."""
+    changes = {k: v.strip() for k, v in body.model_dump().items() if v is not None}
+    for name, value in changes.items():
+        if value and name in checks:
+            checks[name](conn, value)
+    for name, value in changes.items():
+        settings.put(conn, name, value)
+    return settings_out(conn)
 
 
 # --- Status ------------------------------------------------------------------
@@ -110,7 +182,8 @@ def status(conn: sqlite3.Connection = Depends(get_conn), yt: YouTube = Depends(g
                   (SELECT MAX(refreshed_at) FROM channels WHERE tracked = 1) AS last_refreshed"""
     ).fetchone()
     return {
-        "api_key_configured": bool(config.YOUTUBE_API_KEY),
+        "api_key_configured": bool(settings.get(conn, "youtube_api_key")),
+        "analyze_configured": bool(settings.get(conn, "supadata_api_key") and settings.get(conn, "anthropic_api_key")),
         "quota_used": yt.quota_used(),
         "quota_limit": config.DAILY_QUOTA_LIMIT,
         **dict(counts),

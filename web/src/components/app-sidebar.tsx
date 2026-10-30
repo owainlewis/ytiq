@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Flame, LayoutGrid, Monitor, Moon, Plus, RefreshCw, Rss, Sun, Users } from "lucide-react"
+import { Flame, LayoutGrid, Monitor, Moon, Plus, RefreshCw, Rss, Settings, Sun, Users } from "lucide-react"
 import { NavLink, useLocation, useNavigate } from "react-router"
 import { toast } from "sonner"
 
@@ -112,7 +112,14 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SyncStatus />
-        <ThemeSwitch />
+        <div className="flex items-center justify-between">
+          <ThemeSwitch />
+          <Button asChild size="icon-xs" variant="ghost" aria-label="Settings">
+            <NavLink to="/settings">
+              <Settings />
+            </NavLink>
+          </Button>
+        </div>
       </SidebarFooter>
 
       <NewBoardDialog open={newBoard} onOpenChange={setNewBoard} onCreated={(b) => navigate(`/boards/${b.id}`)} />
@@ -188,7 +195,7 @@ function ThemeSwitch() {
     ["system", Monitor, "System"],
   ]
   return (
-    <div className="flex items-center gap-0.5 self-start rounded-lg border bg-background p-0.5">
+    <div className="flex items-center gap-0.5 rounded-lg border bg-background p-0.5">
       {options.map(([value, Icon, label]) => (
         <Button
           key={value}

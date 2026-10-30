@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from ytiq import config
+from ytiq import config, settings
 
 API = "https://www.googleapis.com/youtube/v3"
 
@@ -80,7 +80,7 @@ def best_thumbnail(thumbnails: dict) -> str | None:
 class YouTube:
     def __init__(self, conn: sqlite3.Connection, api_key: str | None = None, http: httpx.Client | None = None):
         self.conn = conn
-        self.api_key = api_key if api_key is not None else config.YOUTUBE_API_KEY
+        self.api_key = api_key if api_key is not None else settings.get(conn, "youtube_api_key")
         self.http = http or httpx.Client(timeout=20)
 
     # Quota resets at midnight Pacific time.
@@ -107,7 +107,7 @@ class YouTube:
 
     def _get(self, endpoint: str, params: dict, cost: int = 1) -> dict:
         if not self.api_key:
-            raise YouTubeError("YOUTUBE_API_KEY is not set. Add it to .env and restart.")
+            raise YouTubeError("Add your YouTube API key in Settings first.")
         self._spend(cost)
         resp = self.http.get(f"{API}/{endpoint}", params={**params, "key": self.api_key})
         if resp.status_code != 200:

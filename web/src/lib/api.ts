@@ -72,6 +72,7 @@ export type BoardDetail = Board & { items: Video[] }
 
 export type Status = {
   api_key_configured: boolean
+  analyze_configured: boolean
   quota_used: number
   quota_limit: number
   channels: number
@@ -81,6 +82,12 @@ export type Status = {
   last_run: string | null
   last_result: { refreshed: number; errors: string[] } | null
 }
+
+export type KeyName = "youtube_api_key" | "supadata_api_key" | "anthropic_api_key"
+
+export type KeyState = { set: boolean; preview: string | null; source: "app" | "env" | null }
+
+export type Settings = Record<KeyName, KeyState>
 
 export type VideoQuery = {
   sort?: string
@@ -151,7 +158,21 @@ export const useBoards = () => useQuery({ queryKey: ["boards"], queryFn: () => r
 export const useBoard = (id: string) =>
   useQuery({ queryKey: ["boards", id], queryFn: () => request<BoardDetail>(`/boards/${id}`) })
 
+export const useSettings = () => useQuery({ queryKey: ["settings"], queryFn: () => request<Settings>("/settings") })
+
 // ---- Mutations ----------------------------------------------------------------
+
+/** Save keys. The server checks each one first and answers with a plain-words fix if it fails. */
+export function useSaveSettings() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (keys: Partial<Record<KeyName, string>>) => request<Settings>("/settings", { method: "PUT", json: keys }),
+    onSuccess: (s) => {
+      qc.setQueryData(["settings"], s)
+      qc.invalidateQueries({ queryKey: ["status"] })
+    },
+  })
+}
 
 const onError = (e: Error) => toast.error(e.message)
 

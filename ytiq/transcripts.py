@@ -10,8 +10,6 @@ import time
 
 import httpx
 
-from ytiq import config
-
 API = "https://api.supadata.ai/v1"
 POLL_SECONDS = 1.0
 POLL_TIMEOUT = 300.0
@@ -22,15 +20,15 @@ class TranscriptError(Exception):
 
 
 class Transcripts:
-    def __init__(self, api_key: str | None = None, http: httpx.Client | None = None, sleep=time.sleep):
-        self.api_key = api_key if api_key is not None else config.SUPADATA_API_KEY
+    def __init__(self, api_key: str = "", http: httpx.Client | None = None, sleep=time.sleep):
+        self.api_key = api_key
         self.http = http or httpx.Client(timeout=60)
         self.sleep = sleep
 
     def get(self, video_id: str) -> str | None:
         """Plain-text transcript, or None if the video has no speech or no transcript."""
         if not self.api_key:
-            raise TranscriptError("SUPADATA_API_KEY is not set. Add it to .env to analyze videos.")
+            raise TranscriptError("Add your Supadata API key in Settings to analyze videos.")
         params = {"url": f"https://www.youtube.com/watch?v={video_id}", "text": "true", "mode": "auto"}
         status, body = self._get("/transcript", params)
         if status == 206:

@@ -42,20 +42,27 @@ class AnalysisError(Exception):
 
 
 class Analyzer:
-    def __init__(self, client: anthropic.Anthropic | None = None, model: str | None = None, http: httpx.Client | None = None):
+    def __init__(
+        self,
+        client: anthropic.Anthropic | None = None,
+        model: str | None = None,
+        http: httpx.Client | None = None,
+        api_key: str = "",
+    ):
         self.client = client
+        self.api_key = api_key
         self.model = model or config.ANALYSIS_MODEL
         self.http = http or httpx.Client(timeout=10, follow_redirects=True)
 
     def check(self) -> None:
         """Fail before spending a transcript credit if Claude can't be called."""
-        if self.client is None and not config.ANTHROPIC_API_KEY:
-            raise AnalysisError("ANTHROPIC_API_KEY is not set. Add it to .env to analyze videos.")
+        if self.client is None and not self.api_key:
+            raise AnalysisError("Add your Claude API key in Settings to analyze videos.")
 
     def analyze(self, video: dict, transcript: str | None) -> Analysis:
         self.check()
         if self.client is None:
-            self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+            self.client = anthropic.Anthropic(api_key=self.api_key)
 
         length = "Short" if video["is_short"] else f"{(video['duration_seconds'] or 0) // 60} minutes"
         details = (

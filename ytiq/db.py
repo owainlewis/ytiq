@@ -78,6 +78,12 @@ CREATE TABLE IF NOT EXISTS video_analyses (
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- API keys saved from the setup screen. See settings.py.
+CREATE TABLE IF NOT EXISTS settings (
+    name  TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS quota_usage (
     day   TEXT PRIMARY KEY,                        -- Pacific date, matches YouTube's reset
     units INTEGER NOT NULL DEFAULT 0

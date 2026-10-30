@@ -44,7 +44,7 @@ def test_transcript_errors():
     t, _ = supadata([httpx.Response(401, json={"message": "Invalid API key"})])
     with pytest.raises(TranscriptError, match="Invalid API key"):
         t.get("abcdefghijk")
-    with pytest.raises(TranscriptError, match="SUPADATA_API_KEY"):
+    with pytest.raises(TranscriptError, match="Supadata API key"):
         Transcripts(api_key="").get("abcdefghijk")
 
 
