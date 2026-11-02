@@ -36,3 +36,7 @@ build:
 # Run backend tests
 test:
     uv run pytest
+
+# Deploy to Cloud Run (needs GCP_PROJECT and YTIQ_USER, see deploy/deploy.sh)
+deploy:
+    deploy/deploy.sh

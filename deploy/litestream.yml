@@ -1,0 +1,5 @@
+# Streams the SQLite database to a replica (a GCS bucket on Cloud Run).
+dbs:
+  - path: ${YTIQ_DB_PATH}
+    replicas:
+      - url: ${LITESTREAM_REPLICA_URL}

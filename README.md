@@ -38,6 +38,17 @@ YouTube gives 10,000 units a day. Refreshing a channel costs 3 units (channel st
 
 Channels refresh when the app starts and when you press refresh in the sidebar. There is no background timer. On startup, channels refreshed in the last `YTIQ_STARTUP_SKIP_HOURS` (default 1) are skipped, so restarts are free. View snapshots are taken on each refresh, so views/day needs at least two refreshes about a day apart.
 
+## Deploy to Google Cloud
+
+`deploy/deploy.sh` runs ytiq on Cloud Run behind Google sign-in (IAP), so only the account you name can open it.
+
+```bash
+gcloud auth login
+GCP_PROJECT=my-project YTIQ_USER=me@gmail.com just deploy
+```
+
+Cloud Run wipes its disk when an instance stops, so [Litestream](https://litestream.io) restores the SQLite database from a GCS bucket on start and streams every change back to it. The service runs one instance at most, since two would each have their own copy. During a redeploy the old and new versions overlap for a few seconds, so don't make changes while one is running.
+
 ## Development
 
 ```bash
