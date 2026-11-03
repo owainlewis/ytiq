@@ -128,7 +128,7 @@ export function AppSidebar() {
 }
 
 function SyncStatus() {
-  const { data: s } = useStatus()
+  const { data: s, isError, refetch } = useStatus()
   const refresh = useRefreshAll()
   const qc = useQueryClient()
   const wasRunning = useRef(false)
@@ -145,29 +145,40 @@ function SyncStatus() {
     wasRunning.current = s.running
   }, [s, qc])
 
+  if (isError) {
+    return (
+      <div className="rounded-lg border bg-background p-3 text-xs">
+        <p className="font-medium">Can’t reach the server</p>
+        <p className="mt-0.5 text-muted-foreground">Start ytiq, then try again.</p>
+        <Button size="xs" variant="outline" className="mt-2" onClick={() => refetch()}>
+          <RefreshCw /> Retry
+        </Button>
+      </div>
+    )
+  }
+
   if (!s) return null
   const pct = Math.min(100, (s.quota_used / s.quota_limit) * 100)
 
   return (
     <div className="rounded-lg border bg-background p-3 text-xs">
-      <div className="flex items-center justify-between">
-        <span className="font-medium">{s.running ? "Refreshing…" : `Updated ${ago(s.last_refreshed)}`}</span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              aria-label="Refresh all channels"
-              disabled={s.running || !s.api_key_configured}
-              onClick={() => refresh.mutate()}
-            >
-              <RefreshCw className={s.running ? "animate-spin" : ""} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Refresh all channels now</TooltipContent>
-        </Tooltip>
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate font-medium">{s.running ? "Refreshing…" : "Last updated"}</span>
+        <Button
+          size="xs"
+          variant="outline"
+          aria-label="Refresh all channels"
+          title={s.api_key_configured ? "Refresh all channels now" : "Add a YouTube API key to refresh"}
+          disabled={s.running || !s.api_key_configured}
+          onClick={() => refresh.mutate()}
+        >
+          <RefreshCw className={s.running ? "animate-spin" : ""} />
+          {s.running ? "Refreshing" : "Refresh"}
+        </Button>
       </div>
-      <p className="mt-0.5 text-muted-foreground">Refreshes on startup, or tap to refresh now</p>
+      <p className="mt-0.5 truncate text-muted-foreground">
+        {s.running ? "Fetching new uploads" : s.last_refreshed ? ago(s.last_refreshed) : "Not yet"}
+      </p>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="mt-2.5">

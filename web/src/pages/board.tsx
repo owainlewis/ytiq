@@ -23,26 +23,35 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { NewBoardDialog } from "@/components/new-board-dialog"
-import { EmptyState, PageBody, PageHeader } from "@/components/page"
+import { EmptyState, ErrorState, PageBody, PageHeader } from "@/components/page"
 import { VideoGrid } from "@/components/video-grid"
 import { useBoard, useBoardItem, useDeleteBoard } from "@/lib/api"
 
 export function BoardPage() {
   const { id = "" } = useParams()
   const navigate = useNavigate()
-  const { data: board, isLoading, error } = useBoard(id)
+  const { data: board, isLoading, error, refetch } = useBoard(id)
   const [edit, setEdit] = useState(false)
   const [confirm, setConfirm] = useState(false)
   const del = useDeleteBoard()
 
   if (error) {
+    const notFound = error.message.toLowerCase().includes("not found")
     return (
       <PageBody>
-        <EmptyState icon={Bookmark} title="Board not found">
-          <Button variant="outline" asChild>
-            <Link to="/boards">Back to boards</Link>
-          </Button>
-        </EmptyState>
+        {notFound ? (
+          <EmptyState icon={Bookmark} title="Board not found">
+            <Button variant="outline" asChild>
+              <Link to="/boards">Back to boards</Link>
+            </Button>
+          </EmptyState>
+        ) : (
+          <ErrorState
+            title="Couldn’t load this board"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetch()}
+          />
+        )}
       </PageBody>
     )
   }

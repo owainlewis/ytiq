@@ -23,23 +23,33 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AddChannelForm } from "@/components/add-channel-form"
-import { EmptyState, PageBody, PageHeader } from "@/components/page"
+import { EmptyState, ErrorState, PageBody, PageHeader } from "@/components/page"
 import { ScoreBadge } from "@/components/score-badge"
 import { ChannelAvatar } from "@/components/video-card"
 import { useChannels, useRefreshChannel, useUntrackChannel, type Channel } from "@/lib/api"
 import { ago, compact } from "@/lib/format"
 
 export function ChannelsPage() {
-  const { data: channels, isLoading } = useChannels()
+  const { data: channels, isLoading, isError, refetch } = useChannels()
   const navigate = useNavigate()
+  const description =
+    channels && channels.length > 0
+      ? `${channels.length} creator${channels.length === 1 ? "" : "s"} in your niche.`
+      : "The creators in your niche."
 
   return (
     <>
-      <PageHeader title="Channels" description="The creators in your niche." />
+      <PageHeader title="Channels" description={description} />
       <PageBody className="flex flex-col gap-6">
         <AddChannelForm className="max-w-xl" />
 
-        {isLoading ? (
+        {isError ? (
+          <ErrorState
+            title="Couldn’t load channels"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
           <div className="flex flex-col gap-2">
             {Array.from({ length: 5 }, (_, i) => (
               <Skeleton key={i} className="h-12 rounded-lg" />
@@ -52,7 +62,7 @@ export function ChannelsPage() {
             description="Paste a channel above. Each refresh costs about 3 of your 10,000 daily API units, so you can track a lot of them."
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border">
+          <div className="overflow-x-auto rounded-xl border">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -74,7 +84,16 @@ export function ChannelsPage() {
                       <div className="flex items-center gap-3">
                         <ChannelAvatar channelId={c.id} name={c.title} className="size-8" />
                         <div className="min-w-0">
-                          <div className="truncate font-medium">{c.title}</div>
+                          <button
+                            type="button"
+                            className="block max-w-56 truncate text-left font-medium hover:underline focus-visible:underline focus-visible:outline-none"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/channels/${c.id}`)
+                            }}
+                          >
+                            {c.title}
+                          </button>
                           <div className="truncate text-xs text-muted-foreground">{c.handle}</div>
                         </div>
                       </div>

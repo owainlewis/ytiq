@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScoreBadge } from "@/components/score-badge"
 import { SaveMenu } from "@/components/save-menu"
 import { Sparkline } from "@/components/sparkline"
+import { ErrorState } from "@/components/page"
 import { ChannelAvatar, useOpenVideo } from "@/components/video-card"
 import { useAnalyze, useBoardItem, useUpdateNote, useVideo, type VideoDetail } from "@/lib/api"
 import { ago, compact, duration } from "@/lib/format"
@@ -19,17 +20,32 @@ export function VideoSheet() {
   const [params] = useSearchParams()
   const id = params.get("v")
   const open = useOpenVideo()
-  const { data: video, isLoading } = useVideo(id)
+  const { data: video, isLoading, isError, refetch } = useVideo(id)
 
   return (
     <Sheet open={!!id} onOpenChange={(o) => !o && open(null)}>
-      <SheetContent showCloseButton={false} className="w-full gap-0 overflow-y-auto p-0 data-[side=right]:sm:max-w-2xl">
+      <SheetContent
+        showCloseButton={false}
+        className="w-full gap-0 overflow-y-auto p-0 data-[side=right]:w-full! data-[side=right]:sm:max-w-2xl"
+      >
         <SheetClose asChild>
           <Button size="icon-sm" aria-label="Close" className="absolute top-3 right-3 z-10 rounded-full bg-black/60 text-white backdrop-blur hover:bg-black/80">
             <X />
           </Button>
         </SheetClose>
-        {isLoading || !video ? <SheetSkeleton /> : <Detail video={video} />}
+        {isLoading ? (
+          <SheetSkeleton />
+        ) : isError || !video ? (
+          <div className="p-6">
+            <ErrorState
+              title="Couldn’t load this video"
+              description="It may have been removed, or the server is unavailable."
+              onRetry={() => refetch()}
+            />
+          </div>
+        ) : (
+          <Detail video={video} />
+        )}
       </SheetContent>
     </Sheet>
   )

@@ -37,8 +37,15 @@ export function VideoCard({ video, showNote }: { video: Video; showNote?: boolea
   const early = ageDays(video.published_at) < 7
 
   return (
-    <article className="group/card flex min-w-0 cursor-pointer flex-col gap-2.5" onClick={() => open(video.id)}>
-      <div className="relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-black/5 dark:ring-white/5">
+    <article className="group/card relative flex min-w-0 cursor-pointer flex-col gap-2.5">
+      {/* The whole card is one keyboard target; content sits above it without stealing clicks. */}
+      <button
+        type="button"
+        onClick={() => open(video.id)}
+        aria-label={`Open “${video.title}”`}
+        className="absolute inset-0 z-10 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      />
+      <div className="pointer-events-none relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-black/5 dark:ring-white/5">
         {video.thumbnail_url && (
           <img
             src={video.thumbnail_url}
@@ -58,8 +65,10 @@ export function VideoCard({ video, showNote }: { video: Video; showNote?: boolea
             variant="secondary"
             aria-label="Save to board"
             className={cn(
-              "absolute top-1.5 right-1.5 bg-background/90 shadow-sm backdrop-blur transition-opacity",
-              saved ? "opacity-100" : "opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100",
+              "pointer-events-auto absolute top-1.5 right-1.5 z-20 bg-background/90 shadow-sm backdrop-blur transition-opacity",
+              saved
+                ? "opacity-100"
+                : "opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 pointer-coarse:opacity-100",
             )}
           >
             <Bookmark className={cn(saved && "fill-primary text-primary")} />
@@ -67,7 +76,7 @@ export function VideoCard({ video, showNote }: { video: Video; showNote?: boolea
         </SaveMenu>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="pointer-events-none flex min-w-0 flex-col gap-1.5">
         <h3 className="line-clamp-2 text-sm leading-snug font-medium" title={video.title}>
           {video.title}
         </h3>
@@ -77,14 +86,16 @@ export function VideoCard({ video, showNote }: { video: Video; showNote?: boolea
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground tabular-nums">
           {/* A low score on a days-old video only means it hasn't had time yet. */}
-          {!(early && (video.outlier_score ?? 0) < 1) && <ScoreBadge score={video.outlier_score} median={video.channel_median_views} />}
+          {!(early && (video.outlier_score ?? 0) < 1) && (
+            <ScoreBadge score={video.outlier_score} median={video.channel_median_views} className="pointer-events-auto" />
+          )}
           <span>{compact(video.view_count)} views</span>
           <span aria-hidden>·</span>
           <span>{ago(video.published_at)}</span>
           {early && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Clock className="size-3.5" aria-label="Early" />
+                <Clock className="pointer-events-auto size-3.5" aria-label="Early" />
               </TooltipTrigger>
               <TooltipContent>Under 7 days old. The score will keep moving.</TooltipContent>
             </Tooltip>
