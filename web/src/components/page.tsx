@@ -1,6 +1,7 @@
-import type { ReactNode } from "react"
-import type { LucideIcon } from "lucide-react"
+import { useEffect, type ReactNode } from "react"
+import { RotateCw, TriangleAlert, type LucideIcon } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
@@ -11,12 +12,20 @@ export function PageHeader({
   description,
   actions,
   children,
+  documentTitle,
 }: {
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
   children?: ReactNode
+  /** Browser tab title when `title` is not plain text. */
+  documentTitle?: string
 }) {
+  useEffect(() => {
+    const label = documentTitle?.trim() || (typeof title === "string" ? title.trim() : "")
+    document.title = label ? `${label} · ytiq` : "ytiq"
+  }, [documentTitle, title])
+
   return (
     <header className="sticky top-0 z-20 border-b bg-background/85 backdrop-blur supports-backdrop-filter:bg-background/70">
       <div className="flex min-h-14 items-center gap-3 px-4 md:px-6">
@@ -64,4 +73,27 @@ export function EmptyState({
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return <h2 className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">{children}</h2>
+}
+
+/** Shown instead of a misleading empty state when a request fails. */
+export function ErrorState({
+  title = "Couldn’t load this page",
+  description = "The server may be offline. Check that ytiq is running, then try again.",
+  onRetry,
+  className,
+}: {
+  title?: string
+  description?: ReactNode
+  onRetry?: () => void
+  className?: string
+}) {
+  return (
+    <EmptyState icon={TriangleAlert} title={title} description={description} className={className}>
+      {onRetry && (
+        <Button variant="outline" onClick={onRetry}>
+          <RotateCw /> Try again
+        </Button>
+      )}
+    </EmptyState>
+  )
 }

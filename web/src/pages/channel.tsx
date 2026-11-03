@@ -4,8 +4,8 @@ import { Link, useNavigate, useParams } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { ShortsFilter, useParam } from "@/components/filters"
-import { EmptyState, PageBody, PageHeader } from "@/components/page"
+import { ShortsFilter, ResetFilters, useParam } from "@/components/filters"
+import { EmptyState, ErrorState, PageBody, PageHeader } from "@/components/page"
 import { ScoreBadge } from "@/components/score-badge"
 import { ChannelAvatar } from "@/components/video-card"
 import { VideoGrid } from "@/components/video-grid"
@@ -13,22 +13,38 @@ import { ChannelMenu } from "@/pages/channels"
 import { useChannel, useVideos } from "@/lib/api"
 import { ago, compact } from "@/lib/format"
 
+const DEFAULTS = { sort: "newest", shorts: "" }
+
 export function ChannelPage() {
   const { id = "" } = useParams()
   const navigate = useNavigate()
-  const { data: channel, isLoading, error } = useChannel(id)
+  const { data: channel, isLoading, error, refetch } = useChannel(id)
   const [sort, setSort] = useParam("sort", "newest")
   const [shorts] = useParam("shorts")
-  const { data: videos, isLoading: videosLoading } = useVideos({ channel_id: id, sort, shorts: shorts === "true", limit: 200 })
+  const {
+    data: videos,
+    isLoading: videosLoading,
+    isError: videosError,
+    refetch: refetchVideos,
+  } = useVideos({ channel_id: id, sort, shorts: shorts === "true", limit: 200 })
 
   if (error) {
+    const notFound = error.message.toLowerCase().includes("not found")
     return (
       <PageBody>
-        <EmptyState icon={VideoIcon} title="Channel not found">
-          <Button variant="outline" asChild>
-            <Link to="/channels">Back to channels</Link>
-          </Button>
-        </EmptyState>
+        {notFound ? (
+          <EmptyState icon={VideoIcon} title="Channel not found">
+            <Button variant="outline" asChild>
+              <Link to="/channels">Back to channels</Link>
+            </Button>
+          </EmptyState>
+        ) : (
+          <ErrorState
+            title="Couldn’t load this channel"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetch()}
+          />
+        )}
       </PageBody>
     )
   }
@@ -46,6 +62,7 @@ export function ChannelPage() {
             {channel?.title ?? <Skeleton className="h-5 w-40" />}
           </span>
         }
+        documentTitle={channel?.title}
         actions={channel && <ChannelMenu channel={channel} onRemoved={() => navigate("/channels")} />}
       >
         <ToggleGroup type="single" variant="outline" size="sm" spacing={0} value={sort} onValueChange={(v) => v && setSort(v)}>
@@ -59,7 +76,8 @@ export function ChannelPage() {
             Most views
           </ToggleGroupItem>
         </ToggleGroup>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <ResetFilters defaults={DEFAULTS} />
           <ShortsFilter />
         </div>
       </PageHeader>
@@ -89,11 +107,19 @@ export function ChannelPage() {
             </dl>
           </div>
         )}
-        <VideoGrid
-          videos={videos}
-          loading={videosLoading}
-          empty={<EmptyState icon={VideoIcon} title="No videos yet" description="Refresh the channel to pull its latest uploads." />}
-        />
+        {videosError ? (
+          <ErrorState
+            title="Couldn’t load this channel’s videos"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetchVideos()}
+          />
+        ) : (
+          <VideoGrid
+            videos={videos}
+            loading={videosLoading}
+            empty={<EmptyState icon={VideoIcon} title="No videos yet" description="Refresh the channel to pull its latest uploads." />}
+          />
+        )}
       </PageBody>
     </>
   )

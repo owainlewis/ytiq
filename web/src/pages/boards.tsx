@@ -5,19 +5,23 @@ import { Link, useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { NewBoardDialog } from "@/components/new-board-dialog"
-import { EmptyState, PageBody, PageHeader } from "@/components/page"
+import { EmptyState, ErrorState, PageBody, PageHeader } from "@/components/page"
 import { useBoards, type Board } from "@/lib/api"
 
 export function BoardsPage() {
-  const { data: boards, isLoading } = useBoards()
+  const { data: boards, isLoading, isError, refetch } = useBoards()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const description =
+    boards && boards.length > 0
+      ? `${boards.length} board${boards.length === 1 ? "" : "s"} in your swipe file.`
+      : "Your swipe file of videos worth learning from."
 
   return (
     <>
       <PageHeader
         title="Boards"
-        description="Your swipe file of videos worth learning from."
+        description={description}
         actions={
           <Button size="sm" onClick={() => setOpen(true)}>
             <Plus /> New board
@@ -25,7 +29,13 @@ export function BoardsPage() {
         }
       />
       <PageBody>
-        {isLoading ? (
+        {isError ? (
+          <ErrorState
+            title="Couldn’t load boards"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetch()}
+          />
+        ) : isLoading ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }, (_, i) => (
               <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />

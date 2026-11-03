@@ -3,22 +3,45 @@ import { Rss, SearchX, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { AddChannelForm } from "@/components/add-channel-form"
-import { ChannelFilter, OptionFilter, RANGES, SearchFilter, ShortsFilter, useParam } from "@/components/filters"
-import { EmptyState, PageBody, PageHeader, SectionLabel } from "@/components/page"
+import { ChannelFilter, OptionFilter, RANGES, ResetFilters, SearchFilter, ShortsFilter, useParam } from "@/components/filters"
+import { EmptyState, ErrorState, PageBody, PageHeader, SectionLabel } from "@/components/page"
 import { VideoGrid } from "@/components/video-grid"
 import { useChannels, useVideos, type Video } from "@/lib/api"
 import { dayBucket } from "@/lib/format"
 
 const PAGE = 60
+const DEFAULTS = { days: "30", channel_id: "all", shorts: "", q: "" }
 
 export function FeedPage() {
-  const { data: channels, isLoading: channelsLoading } = useChannels()
-  const [days] = useParam("days", "30")
-  const [channel] = useParam("channel_id", "all")
+  const { data: channels, isLoading: channelsLoading, isError: channelsError, refetch: refetchChannels } = useChannels()
+  const [days, setDays] = useParam("days", "30")
+  const [channel, setChannel] = useParam("channel_id", "all")
   const [shorts] = useParam("shorts")
-  const [q] = useParam("q")
+  const [q, setQ] = useParam("q")
   const [limit, setLimit] = useState(PAGE)
-  const { data: videos, isLoading } = useVideos({ sort: "newest", days, channel_id: channel, shorts: shorts === "true", q, limit })
+  const { data: videos, isLoading, isError, refetch } = useVideos({
+    sort: "newest",
+    days,
+    channel_id: channel,
+    shorts: shorts === "true",
+    q,
+    limit,
+  })
+
+  if (channelsError && !channels) {
+    return (
+      <>
+        <PageHeader title="Feed" />
+        <PageBody>
+          <ErrorState
+            title="Couldn’t load your feed"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetchChannels()}
+          />
+        </PageBody>
+      </>
+    )
+  }
 
   if (!channelsLoading && channels?.length === 0) {
     return (
@@ -38,26 +61,56 @@ export function FeedPage() {
   }
 
   const groups = groupByDay(videos ?? [])
+  const description =
+    channels && channels.length > 0
+      ? `Latest uploads from ${channels.length} creator${channels.length === 1 ? "" : "s"} you track.`
+      : "Latest uploads from the creators you track."
 
   return (
     <>
-      <PageHeader title="Feed" description="Latest uploads from the creators you track.">
+      <PageHeader title="Feed" description={description}>
         <SearchFilter />
         <ChannelFilter />
         <OptionFilter param="days" fallback="30" options={RANGES} />
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          <ResetFilters defaults={DEFAULTS} />
           <ShortsFilter />
         </div>
       </PageHeader>
       <PageBody className="flex flex-col gap-10">
-        {isLoading || !videos ? (
+        {isError ? (
+          <ErrorState
+            title="Couldn’t load uploads"
+            description="The server may be offline. Check that ytiq is running, then try again."
+            onRetry={() => refetch()}
+          />
+        ) : isLoading || !videos ? (
           <VideoGrid videos={undefined} loading />
         ) : videos.length === 0 ? (
           <EmptyState
             icon={q ? SearchX : Rss}
             title={q ? "No matching videos" : "No uploads in this range"}
-            description="Try a longer time range or a different channel."
-          />
+            description={q ? `Nothing matches “${q}”. Try a different search.` : "Try a longer time range or a different channel."}
+          >
+            {q ? (
+              <Button variant="outline" onClick={() => setQ("")}>
+                Clear search
+              </Button>
+            ) : (
+              <div className="flex flex-wrap justify-center gap-2">
+                {channel !== "all" && (
+                  <Button variant="outline" onClick={() => setChannel("all")}>
+                    All channels
+                  </Button>
+                )}
+                {days !== "all" && (
+                  <Button variant="outline" onClick={() => setDays("all")}>
+                    Search all time
+                  </Button>
+                )}
+              </div>
+            )}
+          </EmptyState>
         ) : (
           groups.map(([label, items]) => (
             <section key={label}>

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react"
-import { Search } from "lucide-react"
+import { RotateCcw, Search, X } from "lucide-react"
 import { useSearchParams } from "react-router"
 
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { Button } from "@/components/ui/button"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { ChannelAvatar } from "@/components/video-card"
 import { useChannels } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
 /** Read and write a filter in the URL so views are linkable and survive reloads. */
 export function useParam(key: string, fallback = ""): [string, (v: string) => void] {
@@ -36,8 +38,50 @@ export function SearchFilter() {
       <InputGroupAddon>
         <Search />
       </InputGroupAddon>
-      <InputGroupInput placeholder="Search titles" value={draft} onChange={(e) => setDraft(e.target.value)} />
+      <InputGroupInput
+        placeholder="Search titles"
+        aria-label="Search titles"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+      />
+      {draft ? (
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton
+            size="icon-xs"
+            aria-label="Clear search"
+            onClick={() => {
+              setDraft("")
+              setQ("")
+            }}
+          >
+            <X />
+          </InputGroupButton>
+        </InputGroupAddon>
+      ) : null}
     </InputGroup>
+  )
+}
+
+/** Clear every filter back to the page defaults. Hidden when nothing is applied. */
+export function ResetFilters({ defaults, className }: { defaults: Record<string, string>; className?: string }) {
+  const [params, setParams] = useSearchParams()
+  // Params equal to their default are not stored, so compare the effective value.
+  const dirty = Object.entries(defaults).some(([key, value]) => (params.get(key) ?? value) !== value)
+  if (!dirty) return null
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className={cn("text-muted-foreground", className)}
+      onClick={() => {
+        const next = new URLSearchParams(params)
+        for (const key of Object.keys(defaults)) next.delete(key)
+        setParams(next, { replace: true })
+      }}
+    >
+      <RotateCcw /> Reset
+    </Button>
   )
 }
 
